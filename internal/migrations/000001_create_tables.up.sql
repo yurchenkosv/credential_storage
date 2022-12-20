@@ -8,16 +8,18 @@ CREATE TABLE IF NOT EXISTS users(
 );
 
 CREATE TABLE IF NOT EXISTS data(
-    "id" BIGSERIAL PRIMARY KEY,
-    "user_id" BIGINT NOT NULL,
-    "credentials_id" BIGINT,
-    "banking_card_id" BIGINT,
-    "metadata_id" BIGINT
+    "id" BIGSERIAL PRIMARY KEY ,
+    "name" VARCHAR(128) NOT NULL UNIQUE,
+    "user_id" BIGINT NOT NULL ,
+    "banking_cards_data_id" BIGINT,
+    "credentials_data_id" BIGINT,
+    "text_data_id" BIGINT,
+    "binary_data_id" BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS banking_cards_data(
     "id" BIGSERIAL PRIMARY KEY,
-    "data_id" BIGINT NOT NULL,
+    "user_id" BIGINT NOT NULL ,
     "number" INTEGER,
     "valid_till" DATE,
     "cardholder_name" VARCHAR(128),
@@ -25,16 +27,28 @@ CREATE TABLE IF NOT EXISTS banking_cards_data(
 );
 
 CREATE TABLE IF NOT EXISTS credentials_data(
-   "id" BIGSERIAL PRIMARY KEY,
-   "data_id" BIGINT NOT NULL,
-   "login" VARCHAR(128),
-   "password" VARCHAR(128)
+    "id" BIGSERIAL PRIMARY KEY,
+    "user_id" BIGINT NOT NULL ,
+    "login" VARCHAR(128),
+    "password" VARCHAR(128)
+);
+
+CREATE TABLE IF NOT EXISTS text_data(
+    "id" BIGSERIAL PRIMARY KEY ,
+    "user_id" BIGINT NOT NULL ,
+    "data" TEXT
+);
+
+CREATE TABLE IF NOT EXISTS binary_data(
+    "id" BIGSERIAL PRIMARY KEY,
+    "user_id" BIGINT NOT NULL ,
+    "link" VARCHAR(128)
 );
 
 CREATE TABLE IF NOT EXISTS metadata(
-   "id" BIGSERIAL PRIMARY KEY,
-   "data_id" BIGINT NOT NULL,
-   "meta" TEXT
+    "id" BIGSERIAL PRIMARY KEY,
+    "data_id" BIGINT,
+    "meta" TEXT
 );
 
 COMMIT;
