@@ -43,8 +43,9 @@ func (s *CredentialsService) SaveBinaryData(ctx context.Context, creds *model.Cr
 	return errors.New("Not implemented")
 }
 
-func (s *CredentialsService) GetCredentialsByName(ctx context.Context, credName string, userID int) (*model.Credentials, error) {
-	return nil, errors.New("Not implemented")
+func (s *CredentialsService) GetCredentialsByName(ctx context.Context, credName string, userID int) ([]*model.Credentials, error) {
+	creds, err := s.repo.GetCredentialsByName(ctx, credName, userID)
+	return creds, err
 }
 
 func (s *CredentialsService) GetAllUserCredentials(ctx context.Context, userID int) ([]*model.Credentials, error) {

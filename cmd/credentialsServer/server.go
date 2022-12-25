@@ -38,8 +38,9 @@ func main() {
 	}
 
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)
-
 	authSvc := service.NewAuthService(repo)
+
+	//interceptor := interceptors.NewInterceptor(tokenAuth)
 
 	grpcAuthController := controllers.NewAuthGRPCController(authSvc, tokenAuth)
 	grpcServer := grpc.NewServer()

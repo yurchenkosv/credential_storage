@@ -257,10 +257,48 @@ func (r *PostgresRepository) SaveBinaryData(ctx context.Context, creds *model.Cr
 	return nil
 }
 
-func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID int) (*model.Credentials, error) {
+func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID int) ([]*model.Credentials, error) {
+	query := `
+		SELECT data.name, 
+		       bcd.cardholder_name,
+		       bcd.number,
+		       bcd.valid_till,
+		       bcd.cvv,
+				cd.login,
+				cd.password,
+				bd.link,
+				m.meta
+		FROM data 
+		    JOIN banking_cards_data bcd ON bcd.id = data.banking_cards_data_id
+			JOIN credentials_data cd ON cd.id = data.credentials_data_id
+			JOIN binary_data bd on bd.id = data.binary_data_id
+			JOIN metadata m on data.id = m.data_id
+		WHERE data.user_id = $1
+	`
+	rows, err := r.Conn.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		result := model.Credentials{}
+		bankData := model.BankingCard{}
+		meta := model.Metadata{}
+		binary := model.BinaryData{}
+
+		rows.Scan(&result.Name,
+			&bankData.CardholderName,
+			&bankData.Number,
+			&bankData.ValidUntil,
+			&bankData.CVV,
+			&result.Login,
+			&result.Password,
+			&binary.Data,
+			&meta.Data,
+		)
+	}
 	return nil, nil
 }
-func (r *PostgresRepository) GetCredentialsByName(ctx context.Context, name string) (*model.Credentials, error) {
+func (r *PostgresRepository) GetCredentialsByName(ctx context.Context, name string, userID int) ([]*model.Credentials, error) {
 	return nil, nil
 }
 
