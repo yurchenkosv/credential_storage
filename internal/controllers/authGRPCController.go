@@ -1,0 +1,76 @@
+package controllers
+
+import (
+	"context"
+	"github.com/go-chi/jwtauth/v5"
+	log "github.com/sirupsen/logrus"
+	"github.com/yurchenkosv/credential_storage/internal/api"
+	"github.com/yurchenkosv/credential_storage/internal/model"
+	"github.com/yurchenkosv/credential_storage/internal/service"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+)
+
+type AuthGRPCController struct {
+	svc  service.Auth
+	auth *jwtauth.JWTAuth
+}
+
+func NewAuthGRPCController(svc service.Auth, auth *jwtauth.JWTAuth) *AuthGRPCController {
+	return &AuthGRPCController{
+		svc:  svc,
+		auth: auth,
+	}
+}
+
+func (c *AuthGRPCController) RegisterUser(ctx context.Context,
+	in *api.UserRegistration,
+) (*api.ServerAuthResponse, error) {
+	user := model.User{
+		Username: in.Login,
+		Password: in.Password,
+		Name:     in.Name,
+	}
+	registeredUser, err := c.svc.RegisterUser(ctx, &user)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	token, err := SetToken(*registeredUser, c.auth)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	header := metadata.Pairs("jwt", token)
+	grpc.SendHeader(ctx, header)
+	response := api.ServerAuthResponse{
+		Message: "Successfully registered",
+		Code:    0,
+	}
+	return &response, nil
+}
+
+func (c *AuthGRPCController) AuthenticateUser(ctx context.Context,
+	in *api.UserAuthentication,
+) (*api.ServerAuthResponse, error) {
+	user := model.User{
+		Username: in.Login,
+		Password: in.Password,
+	}
+	authUser, err := c.svc.AuthenticateUser(ctx, &user)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	token, err := SetToken(*authUser, c.auth)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	header := metadata.Pairs("jwt", token)
+	grpc.SendHeader(ctx, header)
+	return &api.ServerAuthResponse{
+		Message: "Successfully authorized",
+		Code:    0,
+	}, nil
+}

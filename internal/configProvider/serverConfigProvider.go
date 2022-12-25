@@ -7,8 +7,9 @@ import (
 
 type ServerConfig struct {
 	DatabaseDSN string `env:"CRED_SERVER_DATABASE_DSN" yaml:"database_dsn"`
-	Listen      string `env:"CRED_SERVER_LISTEN" yaml:"listen"`
+	Listen      string `env:"CRED_SERVER_LISTEN" envDefault:"localhost:8080" yaml:"listen"`
 	JWTSecret   string `env:"CRED_SERVER_JWT_SECRET" yaml:"jwt_secret"`
+	ListenGRPC  string `env:"CRED_SERVER_GRPC_LISTEN" envDefault:"localhost:8090" yaml:"listen_grpc"`
 }
 
 type ServerConfigProvider struct {

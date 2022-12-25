@@ -2,14 +2,14 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"github.com/go-chi/jwtauth/v5"
 	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/credential_storage/internal/model"
-	"net/http"
 	"time"
 )
 
-func SetToken(writer http.ResponseWriter, user model.User, auth *jwtauth.JWTAuth) http.ResponseWriter {
+func SetToken(user model.User, auth *jwtauth.JWTAuth) (string, error) {
 	claims := map[string]interface{}{
 		"user_id": *user.ID,
 	}
@@ -20,20 +20,29 @@ func SetToken(writer http.ResponseWriter, user model.User, auth *jwtauth.JWTAuth
 	_, token, err := auth.Encode(claims)
 
 	if err != nil {
-		log.Error("error setting token for user:", err)
-		return writer
+		return "", err
 	}
-
-	writer.Header().Add("jwt", token)
-	writer.Header().Add("Set-Cookie", "jwt="+token)
-	return writer
+	return token, nil
 }
 
-func GetUserIDFromToken(ctx context.Context) int {
+func GetUserIDFromTokenContext(ctx context.Context) int {
 	_, claims, err := jwtauth.FromContext(ctx)
 	if err != nil {
 		log.Error(err)
 	}
 	userID := claims["user_id"].(float64)
 	return int(userID)
+}
+
+func GetUserIDFromToken(token string, auth *jwtauth.JWTAuth) (int, error) {
+	decodedToken, err := auth.Decode(token)
+	if err != nil {
+		return 0, err
+	}
+	userID, ok := decodedToken.Get("user_id")
+	if !ok {
+		return 0, errors.New("cannot get user id from token")
+	}
+	id := userID.(int)
+	return id, nil
 }

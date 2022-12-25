@@ -43,7 +43,14 @@ func (h AuthController) HandleUserRegistration(writer http.ResponseWriter, reque
 			return
 		}
 	}
-	writer = SetToken(writer, *updatedUser, h.jwtAuth)
+	token, err := SetToken(*updatedUser, h.jwtAuth)
+	if err != nil {
+		log.Error("error setting token for user:", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	writer.Header().Add("jwt", token)
+	writer.Header().Add("Set-Cookie", "jwt="+token)
 	writer.WriteHeader(http.StatusOK)
 }
 
@@ -68,7 +75,15 @@ func (h AuthController) HanldeUserLogin(writer http.ResponseWriter, request *htt
 			return
 		}
 	}
-	writer = SetToken(writer, *updatedUser, h.jwtAuth)
+	token, err := SetToken(*updatedUser, h.jwtAuth)
+	if err != nil {
+		log.Error("error setting token for user:", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	writer.Header().Add("jwt", token)
+	writer.Header().Add("Set-Cookie", "jwt="+token)
+	writer.WriteHeader(http.StatusOK)
 	writer.WriteHeader(http.StatusOK)
 }
 

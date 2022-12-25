@@ -2,9 +2,9 @@ syntax = "proto3";
 package api;
 option go_package = "internal/api";
 
-service AuthService {
-  rpc RegisterUser(UserRegistration) returns (ServerResponse) {}
-  rpc AuthenticateUser(UserAuthentication) returns (ServerResponse) {}
+service AuthService{
+  rpc RegisterUser(UserRegistration) returns (ServerAuthResponse) {}
+  rpc AuthenticateUser(UserAuthentication) returns (ServerAuthResponse) {}
 }
 
 message UserRegistration {
@@ -18,7 +18,7 @@ message UserAuthentication {
   string password = 2;
 }
 
-message ServerResponse {
+message ServerAuthResponse {
   string message = 1;
   ErrorCode code = 2;
 }

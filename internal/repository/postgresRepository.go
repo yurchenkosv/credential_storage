@@ -52,7 +52,6 @@ func (r *PostgresRepository) GetUser(ctx context.Context, user *model.User) (*mo
 		return user, err
 	}
 	user.ID = userID
-	user.Name = userName
 	return user, nil
 }
 
