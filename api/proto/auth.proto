@@ -1,0 +1,31 @@
+syntax = "proto3";
+package api;
+option go_package = "internal/api";
+
+service AuthService{
+  rpc RegisterUser(UserRegistration) returns (ServerAuthResponse) {}
+  rpc AuthenticateUser(UserAuthentication) returns (ServerAuthResponse) {}
+}
+
+message UserRegistration {
+  string login = 1;
+  string password = 2;
+  string name = 3;
+}
+
+message UserAuthentication {
+  string login = 1;
+  string password = 2;
+}
+
+message ServerAuthResponse {
+  string message = 1;
+  ErrorCode code = 2;
+}
+
+enum ErrorCode {
+  userSuccessfullyAuthenticated = 0;
+  userSuccessfullyRegistered = 1;
+  userAlreadyExists = 2;
+  userWrongCredentials = 3;
+}
