@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"github.com/go-chi/jwtauth/v5"
 	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/credential_storage/internal/api"
 	"github.com/yurchenkosv/credential_storage/internal/model"
@@ -12,14 +11,12 @@ import (
 )
 
 type AuthGRPCController struct {
-	svc  service.Auth
-	auth *jwtauth.JWTAuth
+	authService service.Auth
 }
 
-func NewAuthGRPCController(svc service.Auth, auth *jwtauth.JWTAuth) *AuthGRPCController {
+func NewAuthGRPCController(svc service.Auth) *AuthGRPCController {
 	return &AuthGRPCController{
-		svc:  svc,
-		auth: auth,
+		authService: svc,
 	}
 }
 
@@ -31,12 +28,13 @@ func (c *AuthGRPCController) RegisterUser(ctx context.Context,
 		Password: in.Password,
 		Name:     in.Name,
 	}
-	registeredUser, err := c.svc.RegisterUser(ctx, &user)
+	registeredUser, err := c.authService.RegisterUser(ctx, &user)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	token, err := SetToken(*registeredUser, c.auth)
+
+	token, err := c.authService.GenerateToken(registeredUser)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -45,7 +43,7 @@ func (c *AuthGRPCController) RegisterUser(ctx context.Context,
 	grpc.SendHeader(ctx, header)
 	response := api.ServerAuthResponse{
 		Message: "Successfully registered",
-		Code:    0,
+		Code:    200,
 	}
 	return &response, nil
 }
@@ -57,12 +55,12 @@ func (c *AuthGRPCController) AuthenticateUser(ctx context.Context,
 		Username: in.Login,
 		Password: in.Password,
 	}
-	authUser, err := c.svc.AuthenticateUser(ctx, &user)
+	authUser, err := c.authService.AuthenticateUser(ctx, &user)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	token, err := SetToken(*authUser, c.auth)
+	token, err := c.authService.GenerateToken(authUser)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -71,6 +69,6 @@ func (c *AuthGRPCController) AuthenticateUser(ctx context.Context,
 	grpc.SendHeader(ctx, header)
 	return &api.ServerAuthResponse{
 		Message: "Successfully authorized",
-		Code:    0,
+		Code:    200,
 	}, nil
 }

@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/yurchenkosv/credential_storage/internal/interceptors"
 	"net"
 	"os"
 	"os/signal"
@@ -38,14 +39,14 @@ func main() {
 	}
 
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)
-	authSvc := service.NewAuthService(repo)
+	authSvc := service.NewAuthService(repo, tokenAuth)
 	credentialsSvc := service.NewCredentialsService(repo)
+	authInterceptor := interceptors.NewAuthInterceptor(authSvc)
 
-	//interceptor := interceptors.NewInterceptor(tokenAuth)
-
-	grpcAuthController := controllers.NewAuthGRPCController(authSvc, tokenAuth)
+	grpcAuthController := controllers.NewAuthGRPCController(authSvc)
 	credentialsController := controllers.NewGophkeeperController(credentialsSvc)
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.JWTInterceptor))
+
 	api.RegisterAuthServiceServer(grpcServer, grpcAuthController)
 	api.RegisterCredentialServiceServer(grpcServer, credentialsController)
 

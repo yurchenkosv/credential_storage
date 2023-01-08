@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/go-chi/jwtauth/v5"
 	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/credential_storage/internal/credStorageErrors"
 	"github.com/yurchenkosv/credential_storage/internal/model"
@@ -13,13 +12,11 @@ import (
 
 type AuthController struct {
 	authService service.Auth
-	jwtAuth     *jwtauth.JWTAuth
 }
 
-func NewAuthController(authService *service.Auth, jwtAuth *jwtauth.JWTAuth) AuthController {
+func NewAuthController(authService *service.Auth) AuthController {
 	return AuthController{
 		authService: *authService,
-		jwtAuth:     jwtAuth,
 	}
 }
 
@@ -43,7 +40,7 @@ func (h AuthController) HandleUserRegistration(writer http.ResponseWriter, reque
 			return
 		}
 	}
-	token, err := SetToken(*updatedUser, h.jwtAuth)
+	token, err := h.authService.GenerateToken(updatedUser)
 	if err != nil {
 		log.Error("error setting token for user:", err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -75,7 +72,7 @@ func (h AuthController) HanldeUserLogin(writer http.ResponseWriter, request *htt
 			return
 		}
 	}
-	token, err := SetToken(*updatedUser, h.jwtAuth)
+	token, err := h.authService.GenerateToken(updatedUser)
 	if err != nil {
 		log.Error("error setting token for user:", err)
 		writer.WriteHeader(http.StatusInternalServerError)

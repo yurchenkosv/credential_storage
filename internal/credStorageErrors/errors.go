@@ -10,6 +10,13 @@ type InvalidUserError struct {
 	User string
 }
 
+type InvalidTokenError struct {
+}
+
+func (e InvalidTokenError) Error() string {
+	return "Invalid token"
+}
+
 func (e UserAlreadyExistsError) Error() string {
 	return fmt.Sprintf("cannot save user %s, user already exists", e.User)
 }
