@@ -81,7 +81,7 @@ func (mr *MockRepositoryMockRecorder) GetUser(ctx, user interface{}) *gomock.Cal
 }
 
 // SaveBankingCardData mocks base method.
-func (m *MockRepository) SaveBankingCardData(ctx context.Context, creds *model.CredentialsData, userID int) error {
+func (m *MockRepository) SaveBankingCardData(ctx context.Context, creds *model.BankingCardData, userID int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveBankingCardData", ctx, creds, userID)
 	ret0, _ := ret[0].(error)
@@ -95,7 +95,7 @@ func (mr *MockRepositoryMockRecorder) SaveBankingCardData(ctx, creds, userID int
 }
 
 // SaveBinaryData mocks base method.
-func (m *MockRepository) SaveBinaryData(ctx context.Context, creds *model.CredentialsData, userID int, link string) error {
+func (m *MockRepository) SaveBinaryData(ctx context.Context, creds *model.BinaryData, userID int, link string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveBinaryData", ctx, creds, userID, link)
 	ret0, _ := ret[0].(error)
@@ -123,7 +123,7 @@ func (mr *MockRepositoryMockRecorder) SaveCredentialsData(ctx, creds, userID int
 }
 
 // SaveTextData mocks base method.
-func (m *MockRepository) SaveTextData(ctx context.Context, creds *model.CredentialsData, userID int) error {
+func (m *MockRepository) SaveTextData(ctx context.Context, creds *model.TextData, userID int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveTextData", ctx, creds, userID)
 	ret0, _ := ret[0].(error)
