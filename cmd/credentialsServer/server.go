@@ -38,12 +38,16 @@ func main() {
 	}
 
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)
-
 	authSvc := service.NewAuthService(repo)
+	credentialsSvc := service.NewCredentialsService(repo)
+
+	//interceptor := interceptors.NewInterceptor(tokenAuth)
 
 	grpcAuthController := controllers.NewAuthGRPCController(authSvc, tokenAuth)
+	credentialsController := controllers.NewGophkeeperController(credentialsSvc)
 	grpcServer := grpc.NewServer()
 	api.RegisterAuthServiceServer(grpcServer, grpcAuthController)
+	api.RegisterCredentialServiceServer(grpcServer, credentialsController)
 
 	listener, err := net.Listen("tcp", config.GetConfig().ListenGRPC)
 	if err != nil {

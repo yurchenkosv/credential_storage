@@ -1,25 +1,25 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS users(
-    "id" BIGSERIAL PRIMARY KEY,
+    "id" SERIAL PRIMARY KEY,
     "name" VARCHAR(64) NOT NULL,
     "username" VARCHAR(64) NOT NULL UNIQUE,
     "password" VARCHAR(128) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS data(
-    "id" BIGSERIAL PRIMARY KEY ,
-    "name" VARCHAR(128) NOT NULL UNIQUE,
-    "user_id" BIGINT NOT NULL ,
-    "banking_cards_data_id" BIGINT,
-    "credentials_data_id" BIGINT,
-    "text_data_id" BIGINT,
-    "binary_data_id" BIGINT
+    "id" SERIAL PRIMARY KEY ,
+    "user_id" INTEGER NOT NULL ,
+    "banking_cards_data_id" INTEGER,
+    "credentials_data_id" INTEGER,
+    "text_data_id" INTEGER,
+    "binary_data_id" INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS banking_cards_data(
-    "id" BIGSERIAL PRIMARY KEY,
-    "user_id" BIGINT NOT NULL ,
+    "id" SERIAL PRIMARY KEY,
+    "name" VARCHAR(128) NOT NULL,
+    "user_id" INTEGER NOT NULL ,
     "number" INTEGER,
     "valid_till" DATE,
     "cardholder_name" VARCHAR(128),
@@ -27,21 +27,24 @@ CREATE TABLE IF NOT EXISTS banking_cards_data(
 );
 
 CREATE TABLE IF NOT EXISTS credentials_data(
-    "id" BIGSERIAL PRIMARY KEY,
-    "user_id" BIGINT NOT NULL ,
+    "id" SERIAL PRIMARY KEY,
+    "user_id" INTEGER NOT NULL ,
+    "name" VARCHAR(128) NOT NULL,
     "login" VARCHAR(128),
     "password" VARCHAR(128)
 );
 
 CREATE TABLE IF NOT EXISTS text_data(
-    "id" BIGSERIAL PRIMARY KEY ,
-    "user_id" BIGINT NOT NULL ,
+    "id" SERIAL PRIMARY KEY ,
+    "user_id" INTEGER NOT NULL,
+    "name" VARCHAR(128) NOT NULL,
     "data" TEXT
 );
 
 CREATE TABLE IF NOT EXISTS binary_data(
-    "id" BIGSERIAL PRIMARY KEY,
-    "user_id" BIGINT NOT NULL ,
+    "id" SERIAL PRIMARY KEY,
+    "user_id" INTEGER NOT NULL,
+    "name" VARCHAR(128) NOT NULL,
     "link" VARCHAR(128)
 );
 

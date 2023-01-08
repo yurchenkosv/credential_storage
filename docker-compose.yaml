@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: "credentials"
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+      - "5432"
+
+  credentials_storage:
+    image: credentials_storage:0.1.0
+    build:
+      dockerfile: Dockerfile
+    environment:
+      CRED_SERVER_DATABASE_DSN: "postgresql://postgres:postgres@postgres:5432/credentials?sslmode=disable"
+      CRED_SERVER_JWT_SECRET: "testJWT"
+    ports:
+      - "8090"
