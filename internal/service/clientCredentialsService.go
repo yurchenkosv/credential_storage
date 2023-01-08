@@ -13,11 +13,11 @@ func NewClientCredentialsService(client clients.CredentialsStorageClient) *Clien
 	return &ClientCredentialsService{client: client}
 }
 
-func (s *ClientCredentialsService) GetBankCard() (model.BankingCard, error) {
+func (s *ClientCredentialsService) GetBankCard() (model.BankingCardData, error) {
 	return s.client.GetBankCard()
 }
 
-func (s *ClientCredentialsService) GetCredentials() (model.Credentials, error) {
+func (s *ClientCredentialsService) GetCredentials() (model.CredentialsData, error) {
 	return s.client.GetCredentials()
 }
 
@@ -29,11 +29,11 @@ func (s *ClientCredentialsService) GetBinary() (model.BinaryData, error) {
 	return s.client.GetBinary()
 }
 
-func (s *ClientCredentialsService) SendBankCard(card model.BankingCard) error {
+func (s *ClientCredentialsService) SendBankCard(card model.BankingCardData) error {
 	return s.client.SendBankCard(card)
 }
 
-func (s *ClientCredentialsService) SendCredentials(credentials model.Credentials) error {
+func (s *ClientCredentialsService) SendCredentials(credentials model.CredentialsData) error {
 	return s.client.SendCredentials(credentials)
 }
 
