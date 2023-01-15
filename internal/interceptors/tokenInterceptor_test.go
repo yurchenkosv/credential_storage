@@ -1,58 +1,64 @@
 package interceptors
 
 import (
-	"github.com/golang-jwt/jwt/v4"
+	"context"
+	"github.com/yurchenkosv/credential_storage/internal/service"
+	"google.golang.org/grpc"
+	"reflect"
 	"testing"
 )
 
-func Test_extractUserFromClaims(t *testing.T) {
+func TestAuthInterceptor_JWTInterceptor(t *testing.T) {
+	type fields struct {
+		authSvc service.Auth
+	}
 	type args struct {
-		claims jwt.Claims
+		ctx     context.Context
+		req     interface{}
+		info    *grpc.UnaryServerInfo
+		handler grpc.UnaryHandler
 	}
 	tests := []struct {
 		name    string
+		fields  fields
 		args    args
-		want    string
+		want    interface{}
 		wantErr bool
 	}{
-		{
-			name: "valid claim",
-			args: args{
-				claims: jwt.MapClaims{
-					"user": "user1",
-				},
-			},
-			want:    "user1",
-			wantErr: false,
-		},
-		{
-			name: "invalid claim",
-			args: args{
-				claims: nil,
-			},
-			want:    "",
-			wantErr: true,
-		},
-		{
-			name: "missing user claim",
-			args: args{
-				claims: jwt.MapClaims{
-					"foo": "bar",
-				},
-			},
-			want:    "",
-			wantErr: true,
-		},
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := extractUserFromClaims(tt.args.claims)
+			i := &AuthInterceptor{
+				authSvc: tt.fields.authSvc,
+			}
+			got, err := i.JWTInterceptor(tt.args.ctx, tt.args.req, tt.args.info, tt.args.handler)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("extractUserFromClaims() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("JWTInterceptor() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("extractUserFromClaims() got = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("JWTInterceptor() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewAuthInterceptor(t *testing.T) {
+	type args struct {
+		svc service.Auth
+	}
+	tests := []struct {
+		name string
+		args args
+		want *AuthInterceptor
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewAuthInterceptor(tt.args.svc); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewAuthInterceptor() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -5,7 +5,6 @@ import (
 	"github.com/golang/mock/gomock"
 	mock_repository "github.com/yurchenkosv/credential_storage/internal/mockRepo"
 	"github.com/yurchenkosv/credential_storage/internal/model"
-	"github.com/yurchenkosv/credential_storage/internal/repository"
 	"reflect"
 	"testing"
 )
@@ -134,26 +133,6 @@ func TestAuthService_RegisterUser(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("RegisterUser() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestNewAuthService(t *testing.T) {
-	type args struct {
-		repo repository.Repository
-	}
-	tests := []struct {
-		name string
-		args args
-		want Auth
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewAuthService(tt.args.repo); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewAuthService() = %v, want %v", got, tt.want)
 			}
 		})
 	}
