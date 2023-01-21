@@ -4,11 +4,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"github.com/go-chi/jwtauth/v5"
 	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/credential_storage/internal/credStorageErrors"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"github.com/yurchenkosv/credential_storage/internal/repository"
+	"google.golang.org/grpc/metadata"
 	"time"
 )
 
@@ -17,6 +19,7 @@ type Auth interface {
 	AuthenticateUser(ctx context.Context, user *model.User) (*model.User, error)
 	GenerateToken(user *model.User) (string, error)
 	GetUserFromToken(token string) (*model.User, error)
+	GetJWTTokenFromGRPCContext(ctx context.Context) (string, error)
 }
 
 type AuthService struct {
@@ -60,6 +63,7 @@ func (authService *AuthService) AuthenticateUser(ctx context.Context, user *mode
 	}
 	return user, nil
 }
+
 func (authService *AuthService) GenerateToken(user *model.User) (string, error) {
 	claims := map[string]interface{}{
 		"user_id": *user.ID,
@@ -90,6 +94,19 @@ func (authService *AuthService) GetUserFromToken(token string) (*model.User, err
 	}
 	user.ID = &userID
 	return &user, nil
+}
+
+func (authService *AuthService) GetJWTTokenFromGRPCContext(ctx context.Context) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", errors.New("failed to get metadata from context")
+	}
+	tokens := md.Get("jwt")
+	if len(tokens) == 0 {
+		return "", errors.New("no authorization token found in metadata")
+	}
+	token := tokens[0]
+	return token, nil
 }
 
 func hashPW(pw string) string {

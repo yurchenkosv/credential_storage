@@ -51,10 +51,10 @@ func (mr *MockRepositoryMockRecorder) GetCredentialsByName(ctx, name, userID int
 }
 
 // GetCredentialsByUserID mocks base method.
-func (m *MockRepository) GetCredentialsByUserID(ctx context.Context, userID int) ([]*model.CredentialsData, error) {
+func (m *MockRepository) GetCredentialsByUserID(ctx context.Context, userID int) ([]*model.Credentials, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCredentialsByUserID", ctx, userID)
-	ret0, _ := ret[0].([]*model.CredentialsData)
+	ret0, _ := ret[0].([]*model.Credentials)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -81,31 +81,31 @@ func (mr *MockRepositoryMockRecorder) GetUser(ctx, user interface{}) *gomock.Cal
 }
 
 // SaveBankingCardData mocks base method.
-func (m *MockRepository) SaveBankingCardData(ctx context.Context, creds *model.BankingCardData, userID int) error {
+func (m *MockRepository) SaveBankingCardData(ctx context.Context, data *model.BankingCardData, userID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveBankingCardData", ctx, creds, userID)
+	ret := m.ctrl.Call(m, "SaveBankingCardData", ctx, data, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveBankingCardData indicates an expected call of SaveBankingCardData.
-func (mr *MockRepositoryMockRecorder) SaveBankingCardData(ctx, creds, userID interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) SaveBankingCardData(ctx, data, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBankingCardData", reflect.TypeOf((*MockRepository)(nil).SaveBankingCardData), ctx, creds, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBankingCardData", reflect.TypeOf((*MockRepository)(nil).SaveBankingCardData), ctx, data, userID)
 }
 
 // SaveBinaryData mocks base method.
-func (m *MockRepository) SaveBinaryData(ctx context.Context, creds *model.BinaryData, userID int, link string) error {
+func (m *MockRepository) SaveBinaryData(ctx context.Context, data *model.BinaryData, userID int, link string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveBinaryData", ctx, creds, userID, link)
+	ret := m.ctrl.Call(m, "SaveBinaryData", ctx, data, userID, link)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveBinaryData indicates an expected call of SaveBinaryData.
-func (mr *MockRepositoryMockRecorder) SaveBinaryData(ctx, creds, userID, link interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) SaveBinaryData(ctx, data, userID, link interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBinaryData", reflect.TypeOf((*MockRepository)(nil).SaveBinaryData), ctx, creds, userID, link)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBinaryData", reflect.TypeOf((*MockRepository)(nil).SaveBinaryData), ctx, data, userID, link)
 }
 
 // SaveCredentialsData mocks base method.
@@ -123,17 +123,17 @@ func (mr *MockRepositoryMockRecorder) SaveCredentialsData(ctx, creds, userID int
 }
 
 // SaveTextData mocks base method.
-func (m *MockRepository) SaveTextData(ctx context.Context, creds *model.TextData, userID int) error {
+func (m *MockRepository) SaveTextData(ctx context.Context, data *model.TextData, userID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveTextData", ctx, creds, userID)
+	ret := m.ctrl.Call(m, "SaveTextData", ctx, data, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveTextData indicates an expected call of SaveTextData.
-func (mr *MockRepositoryMockRecorder) SaveTextData(ctx, creds, userID interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) SaveTextData(ctx, data, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTextData", reflect.TypeOf((*MockRepository)(nil).SaveTextData), ctx, creds, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTextData", reflect.TypeOf((*MockRepository)(nil).SaveTextData), ctx, data, userID)
 }
 
 // SaveUser mocks base method.

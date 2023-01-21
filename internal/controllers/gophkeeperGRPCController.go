@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"github.com/yurchenkosv/credential_storage/internal/api"
+	"github.com/yurchenkosv/credential_storage/internal/contextKeys"
 	"github.com/yurchenkosv/credential_storage/internal/service"
 )
 
 type CredentialsGRPCCOntroller struct {
-	svc *service.CredentialsService
+	svc     *service.CredentialsService
+	authSvc service.Auth
 }
 
 func NewGophkeeperController(svc *service.CredentialsService) *CredentialsGRPCCOntroller {
@@ -16,8 +18,8 @@ func NewGophkeeperController(svc *service.CredentialsService) *CredentialsGRPCCO
 }
 
 func (c *CredentialsGRPCCOntroller) SaveCredentialsData(ctx context.Context, data *api.CredentialsData) (*api.ServerResponse, error) {
-	modelData := GRPCToModel(data)
-	id := 1
+	modelData := data.ToModel()
+	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
 	err := c.svc.SaveCredentialsData(ctx, modelData, id)
 	if err != nil {
 		return nil, err
@@ -29,12 +31,32 @@ func (c *CredentialsGRPCCOntroller) SaveCredentialsData(ctx context.Context, dat
 }
 
 func (c CredentialsGRPCCOntroller) SaveBankingData(ctx context.Context, data *api.BankingCardData) (*api.ServerResponse, error) {
-	return nil, errors.New("not implemented")
+	modelData, err := data.ToModel()
+	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
+	if err != nil {
+		return nil, err
+	}
+	err = c.svc.SaveBankingCardData(ctx, modelData, id)
+	if err != nil {
+		return nil, err
+	}
+	return &api.ServerResponse{
+		Status:  0,
+		Message: "Successfully saved data",
+	}, nil
 }
 
 func (c CredentialsGRPCCOntroller) SaveTextData(ctx context.Context, data *api.TextData) (*api.ServerResponse, error) {
-	return nil, errors.New("not implemented")
-
+	modelData := data.ToModel()
+	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
+	err := c.svc.SaveTextData(ctx, modelData, id)
+	if err != nil {
+		return nil, err
+	}
+	return &api.ServerResponse{
+		Status:  0,
+		Message: "Successfully saved data",
+	}, nil
 }
 
 func (c CredentialsGRPCCOntroller) SaveBinaryData(ctx context.Context, data *api.BinaryData) (*api.ServerResponse, error) {

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/go-chi/jwtauth/v5"
 	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/credential_storage/internal/api"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"time"
 )
@@ -46,19 +45,4 @@ func GetUserIDFromToken(token string, auth *jwtauth.JWTAuth) (int, error) {
 	}
 	id := userID.(int)
 	return id, nil
-}
-
-func GRPCToModel(data *api.CredentialsData) *model.CredentialsData {
-	modelData := model.CredentialsData{}
-	modelData.Name = data.Name
-	modelData.Login = data.Login
-	modelData.Password = data.Password
-	for _, meta := range data.Metadata {
-		metadata := model.Metadata{
-			Key:   meta,
-			Value: meta,
-		}
-		modelData.Metadata = append(modelData.Metadata, metadata)
-	}
-	return &modelData
 }

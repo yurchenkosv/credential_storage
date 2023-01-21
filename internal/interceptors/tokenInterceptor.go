@@ -2,10 +2,9 @@ package interceptors
 
 import (
 	"context"
-	"errors"
+	"github.com/yurchenkosv/credential_storage/internal/contextKeys"
 	"github.com/yurchenkosv/credential_storage/internal/service"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 type AuthInterceptor struct {
@@ -21,19 +20,14 @@ func (i *AuthInterceptor) JWTInterceptor(ctx context.Context, req interface{}, i
 		info.FullMethod == "/api.AuthService/RegisterUser" {
 		return handler(ctx, req)
 	}
-
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("failed to get metadata from context")
-	}
-	tokens := md.Get("jwt")
-	if len(tokens) == 0 {
-		return nil, errors.New("no authorization token found in metadata")
-	}
-	token := tokens[0]
-	_, err := i.authSvc.GetUserFromToken(token)
+	token, err := i.authSvc.GetJWTTokenFromGRPCContext(ctx)
 	if err != nil {
 		return nil, err
 	}
+	user, err := i.authSvc.GetUserFromToken(token)
+	if err != nil {
+		return nil, err
+	}
+	ctx = context.WithValue(ctx, contextKeys.UserIDContexKey("user_id"), *user.ID)
 	return handler(ctx, req)
 }
