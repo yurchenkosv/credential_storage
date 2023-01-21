@@ -73,14 +73,14 @@ func (r *PostgresRepository) SaveUser(ctx context.Context, user *model.User) err
 
 func (r *PostgresRepository) SaveCredentialsData(ctx context.Context, creds *model.CredentialsData, userID int) error {
 	query := `
-		INSERT INTO credentials_data(name, login, password, user_id)
-		VALUES ($1, $2, $3, $4);
+		INSERT INTO credentials_data(login, password, user_id)
+		VALUES ($1, $2, $3);
 	`
 	tx, err := r.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, query, creds.Name, creds.Login, creds.Password, userID)
+	_, err = tx.ExecContext(ctx, query, creds.Login, creds.Password, userID)
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			log.Error("unable to rollback transaction: %v", rollbackErr)
@@ -89,10 +89,10 @@ func (r *PostgresRepository) SaveCredentialsData(ctx context.Context, creds *mod
 		return err
 	}
 	query = `
-		INSERT INTO data(user_id, credentials_data_id)
-		VALUES ($1, currval(pg_get_serial_sequence('credentials_data', 'id')));
+		INSERT INTO data(name, user_id, credentials_data_id)
+		VALUES ($1, $2, currval(pg_get_serial_sequence('credentials_data', 'id')));
 	`
-	_, err = tx.ExecContext(ctx, query, userID)
+	_, err = tx.ExecContext(ctx, query, creds.Name, userID)
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			log.Error("unable to rollback transaction: %v", rollbackErr)
@@ -124,12 +124,11 @@ func (r *PostgresRepository) SaveCredentialsData(ctx context.Context, creds *mod
 func (r *PostgresRepository) SaveBankingCardData(ctx context.Context, data *model.BankingCardData, userID int) error {
 	query := `
 		INSERT INTO banking_cards_data(user_id,
-		                               name,
 		                               number,
 		                               valid_till,
 		                               cardholder_name,
 		                               cvv)
-		VALUES ($1, $2, $3, $4, $5, $6);
+		VALUES ($1, $2, $3, $4, $5);
 	`
 	tx, err := r.Conn.BeginTx(ctx, nil)
 	if err != nil {
@@ -138,7 +137,6 @@ func (r *PostgresRepository) SaveBankingCardData(ctx context.Context, data *mode
 	_, err = tx.ExecContext(ctx,
 		query,
 		userID,
-		data.Name,
 		data.Number,
 		data.ValidUntil,
 		data.CardholderName,
@@ -152,10 +150,10 @@ func (r *PostgresRepository) SaveBankingCardData(ctx context.Context, data *mode
 	}
 
 	query = `
-		INSERT INTO data(user_id,banking_cards_data_id)
-		VALUES ($1, currval(pg_get_serial_sequence('banking_cards_data', 'id')));
+		INSERT INTO data(name, user_id, banking_cards_data_id)
+		VALUES ($1, $2, currval(pg_get_serial_sequence('banking_cards_data', 'id')));
 	`
-	_, err = tx.ExecContext(ctx, query, userID)
+	_, err = tx.ExecContext(ctx, query, data.Name, userID)
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			log.Error("unable to rollback transaction: %v", rollbackErr)
@@ -186,15 +184,15 @@ func (r *PostgresRepository) SaveBankingCardData(ctx context.Context, data *mode
 
 func (r *PostgresRepository) SaveTextData(ctx context.Context, data *model.TextData, userID int) error {
 	query := `
-		INSERT INTO text_data(user_id, name, data)
-		VALUES ($1,$2,$3);
+		INSERT INTO text_data(user_id, data)
+		VALUES ($1, $2);
 	`
 	tx, err := r.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.ExecContext(ctx, query, userID, data.Name, data.Data)
+	_, err = tx.ExecContext(ctx, query, userID, data.Data)
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			log.Error("unable to rollback transaction: %v", rollbackErr)
@@ -205,9 +203,9 @@ func (r *PostgresRepository) SaveTextData(ctx context.Context, data *model.TextD
 
 	query = `
 		INSERT INTO data(user_id, text_data_id)
-		VALUES ($1, currval(pg_get_serial_sequence('text_data', 'id')));
+		VALUES ($1, $2, currval(pg_get_serial_sequence('text_data', 'id')));
 	`
-	_, err = tx.ExecContext(ctx, query, userID)
+	_, err = tx.ExecContext(ctx, query, data.Name, userID)
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			log.Error("unable to rollback transaction: %v", rollbackErr)

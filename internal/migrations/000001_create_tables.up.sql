@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users(
 
 CREATE TABLE IF NOT EXISTS data(
     "id" SERIAL PRIMARY KEY ,
+    "name" VARCHAR(128) NOT NULL,
     "user_id" INTEGER NOT NULL ,
     "banking_cards_data_id" INTEGER,
     "credentials_data_id" INTEGER,
@@ -18,7 +19,6 @@ CREATE TABLE IF NOT EXISTS data(
 
 CREATE TABLE IF NOT EXISTS banking_cards_data(
     "id" SERIAL PRIMARY KEY,
-    "name" VARCHAR(128) NOT NULL,
     "user_id" INTEGER NOT NULL ,
     "number" INTEGER,
     "valid_till" DATE,
@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS banking_cards_data(
 CREATE TABLE IF NOT EXISTS credentials_data(
     "id" SERIAL PRIMARY KEY,
     "user_id" INTEGER NOT NULL ,
-    "name" VARCHAR(128) NOT NULL,
     "login" VARCHAR(128),
     "password" VARCHAR(128)
 );
@@ -37,14 +36,12 @@ CREATE TABLE IF NOT EXISTS credentials_data(
 CREATE TABLE IF NOT EXISTS text_data(
     "id" SERIAL PRIMARY KEY ,
     "user_id" INTEGER NOT NULL,
-    "name" VARCHAR(128) NOT NULL,
     "data" TEXT
 );
 
 CREATE TABLE IF NOT EXISTS binary_data(
     "id" SERIAL PRIMARY KEY,
     "user_id" INTEGER NOT NULL,
-    "name" VARCHAR(128) NOT NULL,
     "link" VARCHAR(128)
 );
 
