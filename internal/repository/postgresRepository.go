@@ -251,7 +251,7 @@ func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID 
 }
 
 func (r *PostgresRepository) GetCredentialsByName(ctx context.Context, name string, userID int) ([]model.CredentialsData, error) {
-	return nil, nil
+	return nil, errors.New("not implemented")
 }
 
 func (r *PostgresRepository) UpdateBankingCardData(ctx context.Context, data model.Credentials, userID int) error {
@@ -322,11 +322,79 @@ func (r *PostgresRepository) UpdateCredentialsData(ctx context.Context, data mod
 }
 
 func (r *PostgresRepository) UpdateTextData(ctx context.Context, data model.Credentials, userID int) error {
-	return errors.New("not implemented")
+	err := r.Transactional(ctx, func() error {
+		query := `
+			UPDATE data SET name=$1
+			WHERE user_id=$2 AND credentials_data_id=$3 
+		`
+		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.CredentialsData.ID)
+		if err != nil {
+			return err
+		}
+		textData := data.TextData
+		query = `
+			UPDATE text_data SET data = $1
+			WHERE id=$2 AND user_id=$3
+		`
+		_, err = r.Conn.ExecContext(ctx, query, textData.Data, textData.ID, userID)
+		if err != nil {
+			return err
+		}
+		err = r.updateMetadata(ctx, data.Metadata, data.ID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
 }
 
-func (r PostgresRepository) UpdateBinaryData(ctx context.Context, data model.Credentials, userID int) error {
-	return errors.New("not implemented")
+func (r *PostgresRepository) UpdateBinaryData(ctx context.Context, data model.Credentials, userID int) error {
+	err := r.Transactional(ctx, func() error {
+		query := `
+			UPDATE data SET name=$1
+			WHERE user_id=$2 AND credentials_data_id=$3 
+		`
+		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.CredentialsData.ID)
+		if err != nil {
+			return err
+		}
+		query = `
+			UPDATE binary_data SET link=$1
+			WHERE id=$2 AND user_id=$3
+		`
+		_, err = r.Conn.ExecContext(ctx, query, data.BinaryData.Link, data.BinaryData.ID, userID)
+		if err != nil {
+			return err
+		}
+		err = r.updateMetadata(ctx, data.Metadata, data.ID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+func (r *PostgresRepository) DeleteData(ctx context.Context, data model.Credentials, userID int) error {
+	err := r.Transactional(ctx, func() error {
+		query := `
+			DELETE FROM data WHERE id = $1 AND user_id=$2;
+		`
+		_, err := r.Conn.ExecContext(ctx, query, data.ID, userID)
+		if err != nil {
+			return err
+		}
+		query = `
+			DELETE FROM metadata WHERE data_id=$1;
+		`
+		_, err = r.Conn.ExecContext(ctx, query, data.ID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
 }
 
 func (r *PostgresRepository) MigrateDB(migrationsPath string) error {
@@ -390,14 +458,21 @@ func (r *PostgresRepository) updateMetadata(ctx context.Context, metadata []mode
 		return nil
 	}
 	query := `
-		UPDATE metadata SET meta=$1
-		WHERE data_id=$2
+		DELETE FROM metadata
+		WHERE data_id=$1
 	`
-
+	_, err := r.Conn.ExecContext(ctx, query, dataID)
+	if err != nil {
+		return err
+	}
+	query = `
+		INSERT INTO metadata(data_id, meta)
+		VALUES($1, $2)
+	`
 	for _, meta := range metadata {
-		_, err := r.Conn.ExecContext(ctx, query, meta.Value)
+		_, err = r.Conn.ExecContext(ctx, query, dataID, meta.Value)
 		if err != nil {
-			return err
+			log.Error("cannot insert metadata ", err)
 		}
 	}
 	return nil
