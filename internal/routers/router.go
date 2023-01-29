@@ -11,9 +11,9 @@ import (
 
 func NewRouter(repo repository.Repository, tokenAuth *jwtauth.JWTAuth) chi.Router {
 	var (
-		authService = service.NewAuthService(repo)
+		authService = service.NewAuthService(repo, tokenAuth)
 
-		authController = controllers.NewAuthController(&authService, tokenAuth)
+		authController = controllers.NewAuthController(authService)
 	)
 
 	router := chi.NewRouter()

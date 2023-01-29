@@ -5,11 +5,12 @@ import (
 )
 
 type Metadata struct {
-	Key   string `json:"key"`
+	ID    int
 	Value string `json:"value"`
 }
 
 type BankingCardData struct {
+	ID             int
 	Name           string     `json:"name"`
 	Number         int        `json:"number"`
 	ValidUntil     time.Time  `json:"valid_until"`
@@ -19,18 +20,21 @@ type BankingCardData struct {
 }
 
 type TextData struct {
+	ID       int
 	Name     string     `json:"name"`
 	Data     string     `json:"data"`
 	Metadata []Metadata `json:"metadata"`
 }
 
 type BinaryData struct {
+	ID       int
 	Name     string     `json:"name"`
 	Data     []byte     `json:"data"`
 	Metadata []Metadata `json:"metadata"`
 }
 
 type CredentialsData struct {
+	ID       int
 	Name     string     `json:"name"`
 	Login    string     `json:"login"`
 	Password string     `json:"password"`
@@ -38,6 +42,9 @@ type CredentialsData struct {
 }
 
 type Credentials struct {
+	ID              int
+	Name            string
+	Metadata        []Metadata
 	CredentialsData *CredentialsData `json:"credentialsData,omitempty"`
 	BankingCardData *BankingCardData `json:"bankingCardData,omitempty"`
 	TextData        *TextData        `json:"textData,omitempty"`
