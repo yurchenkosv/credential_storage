@@ -72,258 +72,261 @@ func (r *PostgresRepository) SaveUser(ctx context.Context, user *model.User) err
 }
 
 func (r *PostgresRepository) SaveCredentialsData(ctx context.Context, creds *model.CredentialsData, userID int) error {
-	query := `
-		INSERT INTO credentials_data(login, password, user_id)
-		VALUES ($1, $2, $3);
-	`
-	tx, err := r.Conn.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	_, err = tx.ExecContext(ctx, query, creds.Login, creds.Password, userID)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+	err := r.Transactional(ctx, func() error {
+		query := `
+			INSERT INTO credentials_data(login, password, user_id)
+			VALUES ($1, $2, $3);
+		`
+		_, err := r.Conn.ExecContext(ctx, query, creds.Login, creds.Password, userID)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-	query = `
-		INSERT INTO data(name, user_id, credentials_data_id)
-		VALUES ($1, $2, currval(pg_get_serial_sequence('credentials_data', 'id')));
-	`
-	_, err = tx.ExecContext(ctx, query, creds.Name, userID)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+		query = `
+			INSERT INTO data(name, user_id, credentials_data_id)
+			VALUES ($1, $2, currval(pg_get_serial_sequence('credentials_data', 'id')));
+		`
+		_, err = r.Conn.ExecContext(ctx, query, creds.Name, userID)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	err = saveMetadata(ctx, tx, creds.Metadata)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+		err = r.saveMetadata(ctx, creds.Metadata)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
-		}
-		return err
-	}
-	return nil
+		return nil
+	})
+	return err
 }
 
 func (r *PostgresRepository) SaveBankingCardData(ctx context.Context, data *model.BankingCardData, userID int) error {
-	query := `
-		INSERT INTO banking_cards_data(user_id,
+	err := r.Transactional(ctx, func() error {
+		query := `
+			INSERT INTO banking_cards_data(user_id,
 		                               number,
 		                               valid_till,
 		                               cardholder_name,
 		                               cvv)
-		VALUES ($1, $2, $3, $4, $5);
-	`
-	tx, err := r.Conn.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	_, err = tx.ExecContext(ctx,
-		query,
-		userID,
-		data.Number,
-		data.ValidUntil,
-		data.CardholderName,
-		data.CVV)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+			VALUES ($1, $2, $3, $4, $5);
+		`
+		_, err := r.Conn.ExecContext(ctx,
+			query,
+			userID,
+			data.Number,
+			data.ValidUntil,
+			data.CardholderName,
+			data.CVV)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	query = `
-		INSERT INTO data(name, user_id, banking_cards_data_id)
-		VALUES ($1, $2, currval(pg_get_serial_sequence('banking_cards_data', 'id')));
-	`
-	_, err = tx.ExecContext(ctx, query, data.Name, userID)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+		query = `
+			INSERT INTO data(name, user_id, banking_cards_data_id)
+			VALUES ($1, $2, currval(pg_get_serial_sequence('banking_cards_data', 'id')));
+		`
+		_, err = r.Conn.ExecContext(ctx, query, data.Name, userID)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	err = saveMetadata(ctx, tx, data.Metadata)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+		err = r.saveMetadata(ctx, data.Metadata)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
-		}
-		return err
-	}
-	return nil
+		return nil
+	})
+	return err
 }
 
 func (r *PostgresRepository) SaveTextData(ctx context.Context, data *model.TextData, userID int) error {
-	query := `
-		INSERT INTO text_data(user_id, data)
-		VALUES ($1, $2);
-	`
-	tx, err := r.Conn.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.ExecContext(ctx, query, userID, data.Data)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+	err := r.Transactional(ctx, func() error {
+		query := `
+			INSERT INTO text_data(user_id, data)
+			VALUES ($1, $2);
+		`
+		_, err := r.Conn.ExecContext(ctx, query, userID, data.Data)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	query = `
-		INSERT INTO data(user_id, text_data_id)
-		VALUES ($1, $2, currval(pg_get_serial_sequence('text_data', 'id')));
-	`
-	_, err = tx.ExecContext(ctx, query, data.Name, userID)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+		query = `
+			INSERT INTO data(user_id, text_data_id)
+			VALUES ($1, $2, currval(pg_get_serial_sequence('text_data', 'id')));
+		`
+		_, err = r.Conn.ExecContext(ctx, query, data.Name, userID)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	err = saveMetadata(ctx, tx, data.Metadata)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+		err = r.saveMetadata(ctx, data.Metadata)
+		if err != nil {
+			return err
 		}
-		return err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
-		}
-		return err
-	}
-	return nil
+		return nil
+	})
+	return err
 }
 
 func (r *PostgresRepository) SaveBinaryData(ctx context.Context, data *model.BinaryData, userID int, link string) error {
+
+	err := r.Transactional(ctx, func() error {
+		query := `
+			INSERT INTO binary_data(user_id, link)
+			VALUES ($1, $2);
+		`
+		_, err := r.Conn.ExecContext(ctx, query, userID, link)
+		if err != nil {
+			return err
+		}
+		query = `
+			INSERT INTO data(name, user_id, binary_data_id)
+			VALUES ($1, $2, currval(pg_get_serial_sequence('binary_data', 'id')));		
+		`
+		_, err = r.Conn.ExecContext(ctx, query, data.Name, userID)
+		if err != nil {
+			return err
+		}
+		err = r.saveMetadata(ctx, data.Metadata)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID int) ([]model.Credentials, error) {
 	query := `
-		INSERT INTO binary_data(user_id, name, link)
-		VALUES ($1, $2, $3);
+		SELECT data.name, cd.login, cd.password,
+			   bcd.cardholder_name, bcd.number, bcd.valid_till, bcd.cvv,
+			   td.data, data.id
+-- 			   bd.link
+		FROM data
+				FULL JOIN credentials_data cd ON data.credentials_data_id = cd.id
+				FULL JOIN banking_cards_data bcd ON bcd.id = data.banking_cards_data_id
+				FULL JOIN text_data td ON td.id = data.text_data_id
+-- 				FULL JOIN binary_data bd ON bd.id = data.binary_data_id
+		WHERE data.user_id=$1;
 	`
-	tx, err := r.Conn.BeginTx(ctx, nil)
+	rows, err := r.Conn.QueryContext(ctx, query, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = tx.ExecContext(ctx, query, userID, data.Name, link)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+	credentials := []model.Credentials{}
+	for rows.Next() {
+		var id int
+		secrets := model.CredentialsData{}
+		bankData := model.BankingCardData{}
+		textData := model.TextData{}
+		cred := model.Credentials{}
+		err = rows.Scan(
+			&cred.Name,
+			&secrets.Login,
+			&secrets.Password,
+			&bankData.CardholderName,
+			&bankData.Number,
+			&bankData.ValidUntil,
+			&bankData.CVV,
+			&textData.Data,
+			&id,
+		)
+		if err != nil {
+			continue
 		}
-		return err
-	}
 
-	query = `
-		INSERT INTO data(user_id, binary_data_id)
-		VALUES ($1, currval(pg_get_serial_sequence('binary_data', 'id')));		
-	`
-	_, err = tx.ExecContext(ctx, query, userID)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
+		qry := `
+			SELECT meta FROM metadata WHERE data_id=$1;	
+		`
+		rows, err = r.Conn.QueryContext(ctx, qry, id)
+		if err != nil {
+			return nil, err
 		}
-		return err
-	}
+		for rows.Next() {
+			meta := model.Metadata{}
+			err = rows.Scan(&meta.Value)
+			if err != nil {
+				continue
+			}
+			cred.Metadata = append(cred.Metadata, meta)
+		}
 
-	err = saveMetadata(ctx, tx, data.Metadata)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
-		}
-		return err
+		credentials = append(credentials, cred)
 	}
-
-	err = tx.Commit()
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
-			return rollbackErr
-		}
-		return err
-	}
-	return nil
+	return credentials, nil
 }
 
-func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID int) ([]*model.Credentials, error) {
-	//query := `
-	//	SELECT  cd.name, cd.login, cd.password,
-	//			bcd.name, bcd.cvv, bcd.valid_till, bcd.number, bcd.cardholder_name,
-	//			bd.name, bd.link,
-	//			td.name, td.data
-	//	FROM data
-	//		FULL JOIN credentials_data cd ON cd.id = data.credentials_data_id
-	//		FULL JOIN banking_cards_data bcd ON bcd.id = data.banking_cards_data_id
-	//		FULL JOIN binary_data bd ON bd.id = data.binary_data_id
-	//		FULL JOIN text_data td ON td.id = data.text_data_id
-	//	WHERE data.user_id=1;
-	//`
-	//rows, err := r.Conn.QueryContext(ctx, query, userID)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//for rows.Next() {
-	//	result := model.CredentialsData{}
-	//	bankData := model.BankingCardData{}
-	//	meta := model.Metadata{}
-	//	binary := model.BinaryData{}
-	//
-	//	rows.Scan(&result.Name,
-	//		&bankData.CardholderName,
-	//		&bankData.Number,
-	//		&bankData.ValidUntil,
-	//		&bankData.CVV,
-	//		&result.Login,
-	//		&result.Password,
-	//		&binary.Data,
-	//		&meta.Key,
-	//	)
-	//}
+func (r *PostgresRepository) GetCredentialsByName(ctx context.Context, name string, userID int) ([]model.CredentialsData, error) {
 	return nil, nil
 }
 
-func (r *PostgresRepository) GetCredentialsByName(ctx context.Context, name string, userID int) ([]*model.CredentialsData, error) {
-	return nil, nil
+func (r *PostgresRepository) UpdateBankingCardData(ctx context.Context, data model.Credentials, userID int) error {
+	err := r.Transactional(ctx, func() error {
+		query := `
+			UPDATE data SET name=$1
+			WHERE user_id=$2 AND banking_cards_data_id=$3;
+		`
+		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.BankingCardData.ID)
+		if err != nil {
+			return err
+		}
+		query = `
+			UPDATE banking_cards_data SET cvv=$1, valid_till=$2, number=$3, cardholder_name=$4
+			FROM banking_cards_data
+				JOIN data d ON banking_cards_data.id = d.banking_cards_data_id
+			WHERE d.name=$5 AND d.user_id=$6;
+		`
+		bankingData := data.BankingCardData
+		_, err = r.Conn.ExecContext(ctx,
+			query,
+			bankingData.CVV,
+			bankingData.ValidUntil,
+			bankingData.Number,
+			bankingData.CardholderName,
+			bankingData.Name,
+			userID)
+		if err != nil {
+			return err
+		}
+		err = r.updateMetadata(ctx, data.Metadata, data.ID)
+		return nil
+	})
+	return err
+}
+
+func (r *PostgresRepository) UpdateCredentialsData(ctx context.Context, data model.Credentials, userID int) error {
+	err := r.Transactional(ctx, func() error {
+		query := `
+			UPDATE data SET name=$1
+			WHERE user_id=$2 AND credentials_data_id=$3 
+		`
+		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.CredentialsData.ID)
+		if err != nil {
+			return err
+		}
+		credentialsData := data.CredentialsData
+		query = `
+			UPDATE credentials_data set login=$1, password=$2
+			WHERE id=$3 AND user_id=$4
+		`
+		_, err = r.Conn.ExecContext(ctx,
+			query,
+			credentialsData.Login,
+			credentialsData.Password,
+			credentialsData.ID,
+			userID)
+		if err != nil {
+			return err
+		}
+		err = r.updateMetadata(ctx, data.Metadata, data.ID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+func (r *PostgresRepository) UpdateTextData(ctx context.Context, data model.Credentials, userID int) error {
+	return errors.New("not implemented")
+}
+
+func (r PostgresRepository) UpdateBinaryData(ctx context.Context, data model.Credentials, userID int) error {
+	return errors.New("not implemented")
 }
 
 func (r *PostgresRepository) MigrateDB(migrationsPath string) error {
@@ -341,7 +344,31 @@ func (r *PostgresRepository) MigrateDB(migrationsPath string) error {
 	return nil
 }
 
-func saveMetadata(ctx context.Context, tx *sql.Tx, metadata []model.Metadata) error {
+func (r *PostgresRepository) Transactional(ctx context.Context, do func() error) error {
+	tx, err := r.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	err = do()
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			log.Error("unable to rollback transaction: %v", rollbackErr)
+			return rollbackErr
+		}
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			log.Error("unable to rollback transaction: %v", rollbackErr)
+			return rollbackErr
+		}
+		return err
+	}
+	return nil
+}
+
+func (r *PostgresRepository) saveMetadata(ctx context.Context, metadata []model.Metadata) error {
 	if len(metadata) == 0 {
 		return nil
 	}
@@ -349,9 +376,26 @@ func saveMetadata(ctx context.Context, tx *sql.Tx, metadata []model.Metadata) er
 		INSERT INTO metadata(data_id, meta)
 		VALUES (currval(pg_get_serial_sequence('data', 'id')), $1);
 	`
+	for _, meta := range metadata {
+		_, err := r.Conn.ExecContext(ctx, query, meta.Value)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *PostgresRepository) updateMetadata(ctx context.Context, metadata []model.Metadata, dataID int) error {
+	if len(metadata) == 0 {
+		return nil
+	}
+	query := `
+		UPDATE metadata SET meta=$1
+		WHERE data_id=$2
+	`
 
 	for _, meta := range metadata {
-		_, err := tx.ExecContext(ctx, query, meta.Value)
+		_, err := r.Conn.ExecContext(ctx, query, meta.Value)
 		if err != nil {
 			return err
 		}

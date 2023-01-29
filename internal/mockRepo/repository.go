@@ -36,10 +36,10 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // GetCredentialsByName mocks base method.
-func (m *MockRepository) GetCredentialsByName(ctx context.Context, name string, userID int) ([]*model.CredentialsData, error) {
+func (m *MockRepository) GetCredentialsByName(ctx context.Context, name string, userID int) ([]model.CredentialsData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCredentialsByName", ctx, name, userID)
-	ret0, _ := ret[0].([]*model.CredentialsData)
+	ret0, _ := ret[0].([]model.CredentialsData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -51,10 +51,10 @@ func (mr *MockRepositoryMockRecorder) GetCredentialsByName(ctx, name, userID int
 }
 
 // GetCredentialsByUserID mocks base method.
-func (m *MockRepository) GetCredentialsByUserID(ctx context.Context, userID int) ([]*model.Credentials, error) {
+func (m *MockRepository) GetCredentialsByUserID(ctx context.Context, userID int) ([]model.Credentials, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCredentialsByUserID", ctx, userID)
-	ret0, _ := ret[0].([]*model.Credentials)
+	ret0, _ := ret[0].([]model.Credentials)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

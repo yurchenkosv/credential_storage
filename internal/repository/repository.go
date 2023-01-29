@@ -14,6 +14,6 @@ type Repository interface {
 	SaveTextData(ctx context.Context, data *model.TextData, userID int) error
 	SaveBinaryData(ctx context.Context, data *model.BinaryData, userID int, link string) error
 
-	GetCredentialsByUserID(ctx context.Context, userID int) ([]*model.Credentials, error)
-	GetCredentialsByName(ctx context.Context, name string, userID int) ([]*model.CredentialsData, error)
+	GetCredentialsByUserID(ctx context.Context, userID int) ([]model.Credentials, error)
+	GetCredentialsByName(ctx context.Context, name string, userID int) ([]model.CredentialsData, error)
 }
