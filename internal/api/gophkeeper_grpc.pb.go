@@ -26,10 +26,7 @@ type CredentialServiceClient interface {
 	SaveBankingData(ctx context.Context, in *BankingCardData, opts ...grpc.CallOption) (*ServerResponse, error)
 	SaveTextData(ctx context.Context, in *TextData, opts ...grpc.CallOption) (*ServerResponse, error)
 	SaveBinaryData(ctx context.Context, in *BinaryData, opts ...grpc.CallOption) (*ServerResponse, error)
-	GetCredentialsData(ctx context.Context, in *CredentialsDataRequest, opts ...grpc.CallOption) (*CredentialsData, error)
-	GetBankingCardData(ctx context.Context, in *BankingCardDataRequest, opts ...grpc.CallOption) (*BankingCardData, error)
-	GetTextData(ctx context.Context, in *TextDataRequest, opts ...grpc.CallOption) (*TextData, error)
-	GetBinaryData(ctx context.Context, in *BinaryDataRequest, opts ...grpc.CallOption) (*BinaryData, error)
+	GetData(ctx context.Context, in *AllDataRequest, opts ...grpc.CallOption) (*SecretDataList, error)
 }
 
 type credentialServiceClient struct {
@@ -76,36 +73,9 @@ func (c *credentialServiceClient) SaveBinaryData(ctx context.Context, in *Binary
 	return out, nil
 }
 
-func (c *credentialServiceClient) GetCredentialsData(ctx context.Context, in *CredentialsDataRequest, opts ...grpc.CallOption) (*CredentialsData, error) {
-	out := new(CredentialsData)
-	err := c.cc.Invoke(ctx, "/api.CredentialService/GetCredentialsData", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *credentialServiceClient) GetBankingCardData(ctx context.Context, in *BankingCardDataRequest, opts ...grpc.CallOption) (*BankingCardData, error) {
-	out := new(BankingCardData)
-	err := c.cc.Invoke(ctx, "/api.CredentialService/GetBankingCardData", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *credentialServiceClient) GetTextData(ctx context.Context, in *TextDataRequest, opts ...grpc.CallOption) (*TextData, error) {
-	out := new(TextData)
-	err := c.cc.Invoke(ctx, "/api.CredentialService/GetTextData", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *credentialServiceClient) GetBinaryData(ctx context.Context, in *BinaryDataRequest, opts ...grpc.CallOption) (*BinaryData, error) {
-	out := new(BinaryData)
-	err := c.cc.Invoke(ctx, "/api.CredentialService/GetBinaryData", in, out, opts...)
+func (c *credentialServiceClient) GetData(ctx context.Context, in *AllDataRequest, opts ...grpc.CallOption) (*SecretDataList, error) {
+	out := new(SecretDataList)
+	err := c.cc.Invoke(ctx, "/api.CredentialService/GetData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,10 +90,7 @@ type CredentialServiceServer interface {
 	SaveBankingData(context.Context, *BankingCardData) (*ServerResponse, error)
 	SaveTextData(context.Context, *TextData) (*ServerResponse, error)
 	SaveBinaryData(context.Context, *BinaryData) (*ServerResponse, error)
-	GetCredentialsData(context.Context, *CredentialsDataRequest) (*CredentialsData, error)
-	GetBankingCardData(context.Context, *BankingCardDataRequest) (*BankingCardData, error)
-	GetTextData(context.Context, *TextDataRequest) (*TextData, error)
-	GetBinaryData(context.Context, *BinaryDataRequest) (*BinaryData, error)
+	GetData(context.Context, *AllDataRequest) (*SecretDataList, error)
 }
 
 // UnimplementedCredentialServiceServer should be embedded to have forward compatible implementations.
@@ -142,17 +109,8 @@ func (UnimplementedCredentialServiceServer) SaveTextData(context.Context, *TextD
 func (UnimplementedCredentialServiceServer) SaveBinaryData(context.Context, *BinaryData) (*ServerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveBinaryData not implemented")
 }
-func (UnimplementedCredentialServiceServer) GetCredentialsData(context.Context, *CredentialsDataRequest) (*CredentialsData, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCredentialsData not implemented")
-}
-func (UnimplementedCredentialServiceServer) GetBankingCardData(context.Context, *BankingCardDataRequest) (*BankingCardData, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBankingCardData not implemented")
-}
-func (UnimplementedCredentialServiceServer) GetTextData(context.Context, *TextDataRequest) (*TextData, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTextData not implemented")
-}
-func (UnimplementedCredentialServiceServer) GetBinaryData(context.Context, *BinaryDataRequest) (*BinaryData, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBinaryData not implemented")
+func (UnimplementedCredentialServiceServer) GetData(context.Context, *AllDataRequest) (*SecretDataList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetData not implemented")
 }
 
 // UnsafeCredentialServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -238,74 +196,20 @@ func _CredentialService_SaveBinaryData_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CredentialService_GetCredentialsData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CredentialsDataRequest)
+func _CredentialService_GetData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AllDataRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CredentialServiceServer).GetCredentialsData(ctx, in)
+		return srv.(CredentialServiceServer).GetData(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/api.CredentialService/GetCredentialsData",
+		FullMethod: "/api.CredentialService/GetData",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CredentialServiceServer).GetCredentialsData(ctx, req.(*CredentialsDataRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CredentialService_GetBankingCardData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BankingCardDataRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CredentialServiceServer).GetBankingCardData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/api.CredentialService/GetBankingCardData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CredentialServiceServer).GetBankingCardData(ctx, req.(*BankingCardDataRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CredentialService_GetTextData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TextDataRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CredentialServiceServer).GetTextData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/api.CredentialService/GetTextData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CredentialServiceServer).GetTextData(ctx, req.(*TextDataRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CredentialService_GetBinaryData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BinaryDataRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CredentialServiceServer).GetBinaryData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/api.CredentialService/GetBinaryData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CredentialServiceServer).GetBinaryData(ctx, req.(*BinaryDataRequest))
+		return srv.(CredentialServiceServer).GetData(ctx, req.(*AllDataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -334,20 +238,8 @@ var CredentialService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CredentialService_SaveBinaryData_Handler,
 		},
 		{
-			MethodName: "GetCredentialsData",
-			Handler:    _CredentialService_GetCredentialsData_Handler,
-		},
-		{
-			MethodName: "GetBankingCardData",
-			Handler:    _CredentialService_GetBankingCardData_Handler,
-		},
-		{
-			MethodName: "GetTextData",
-			Handler:    _CredentialService_GetTextData_Handler,
-		},
-		{
-			MethodName: "GetBinaryData",
-			Handler:    _CredentialService_GetBinaryData_Handler,
+			MethodName: "GetData",
+			Handler:    _CredentialService_GetData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

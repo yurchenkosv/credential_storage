@@ -9,6 +9,10 @@ type Metadata struct {
 	Value string `json:"value"`
 }
 
+func (m Metadata) String() string {
+	return m.Value
+}
+
 type BankingCardData struct {
 	ID             int
 	Name           string     `json:"name"`

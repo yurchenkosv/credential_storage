@@ -18,10 +18,6 @@ type PostgresRepository struct {
 	DBURI string
 }
 
-func (r *PostgresRepository) Save() error {
-	return nil
-}
-
 func NewPostgresRepo(dbURI string) (*PostgresRepository, error) {
 	conn, err := sqlx.Connect("postgres", dbURI)
 	if err != nil {
@@ -146,10 +142,10 @@ func (r *PostgresRepository) SaveTextData(ctx context.Context, data *model.TextD
 			return err
 		}
 		query = `
-			INSERT INTO data(user_id, text_data_id)
-			VALUES ($1, $2, currval(pg_get_serial_sequence('text_data', 'id')));
+			INSERT INTO data(user_id, name, text_data_id)
+			VALUES ($1, currval(pg_get_serial_sequence('text_data', 'id')));
 		`
-		_, err = r.Conn.ExecContext(ctx, query, data.Name, userID)
+		_, err = r.Conn.ExecContext(ctx, query, userID, data.Name)
 		if err != nil {
 			return err
 		}
