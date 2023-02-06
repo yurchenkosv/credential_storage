@@ -16,6 +16,7 @@ message CredentialsData {
   string password = 2;
   string name = 3;
   repeated string metadata = 4;
+  int32 id = 5;
 }
 
 message BankingCardData{
@@ -25,18 +26,21 @@ message BankingCardData{
   int32  cvv = 4;
   string name = 5;
   repeated string metadata = 6;
+  int32 id = 7;
 }
 
 message TextData {
   string data = 1;
   string name = 2;
   repeated string metadata = 3;
+  int32 id = 4;
 }
 
 message BinaryData {
   bytes data = 1;
   string name = 2;
   repeated string metadata = 3;
+  int32 id = 4;
 }
 
 message ServerResponse {
@@ -51,7 +55,9 @@ message SecretsDataResponse {
   CredentialsData credentialsData = 2;
   BankingCardData bankingData = 3;
   TextData textData = 4;
-  BinaryData binaryData =5;
+  BinaryData binaryData = 5;
+  repeated string metadata = 6;
+  int32 id = 7;
 }
 
 message SecretDataList{

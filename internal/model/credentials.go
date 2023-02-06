@@ -1,9 +1,5 @@
 package model
 
-import (
-	"time"
-)
-
 type Metadata struct {
 	ID    int
 	Value string `json:"value"`
@@ -16,10 +12,10 @@ func (m Metadata) String() string {
 type BankingCardData struct {
 	ID             int
 	Name           string     `json:"name"`
-	Number         int        `json:"number"`
-	ValidUntil     time.Time  `json:"valid_until"`
+	Number         string     `json:"number"`
+	ValidUntil     string     `json:"valid_until"`
 	CardholderName string     `json:"cardholder_name"`
-	CVV            int        `json:"cvv"`
+	CVV            string     `json:"cvv"`
 	Metadata       []Metadata `json:"metadata"`
 }
 
@@ -47,10 +43,10 @@ type CredentialsData struct {
 
 type Credentials struct {
 	ID              int
-	Name            string
-	Metadata        []Metadata
+	Name            string           `json:"name"`
 	CredentialsData *CredentialsData `json:"credentialsData,omitempty"`
 	BankingCardData *BankingCardData `json:"bankingCardData,omitempty"`
 	TextData        *TextData        `json:"textData,omitempty"`
 	BinaryData      *BinaryData      `json:"binaryData,omitempty"`
+	Metadata        []Metadata       `json:"metadata"`
 }

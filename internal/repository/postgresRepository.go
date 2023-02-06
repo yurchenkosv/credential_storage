@@ -188,9 +188,10 @@ func (r *PostgresRepository) SaveBinaryData(ctx context.Context, data *model.Bin
 
 func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID int) ([]model.Credentials, error) {
 	query := `
-		SELECT data.name, cd.login, cd.password,
-			   bcd.cardholder_name, bcd.number, bcd.valid_till, bcd.cvv,
-			   td.data, data.id
+		SELECT data.id, data.name, 
+		       cd.id, cd.login, cd.password,
+			   bcd.id, bcd.cardholder_name, bcd.number, bcd.valid_till, bcd.cvv,
+			   td.id, td.data
 -- 			   bd.link
 		FROM data
 				FULL JOIN credentials_data cd ON data.credentials_data_id = cd.id
@@ -205,38 +206,76 @@ func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID 
 	}
 	credentials := []model.Credentials{}
 	for rows.Next() {
-		var id int
-		secrets := model.CredentialsData{}
-		bankData := model.BankingCardData{}
-		textData := model.TextData{}
 		cred := model.Credentials{}
+		var (
+			id             int
+			credID         sql.NullInt32
+			login          sql.NullString
+			password       sql.NullString
+			bankDataID     sql.NullInt32
+			cardholderName sql.NullString
+			bankingNumber  sql.NullString
+			validUntill    sql.NullString
+			cvv            sql.NullString
+			textDataID     sql.NullInt32
+			text           sql.NullString
+		)
 		err = rows.Scan(
-			&cred.Name,
-			&secrets.Login,
-			&secrets.Password,
-			&bankData.CardholderName,
-			&bankData.Number,
-			&bankData.ValidUntil,
-			&bankData.CVV,
-			&textData.Data,
 			&id,
+			&cred.Name,
+			&credID,
+			&login,
+			&password,
+			&bankDataID,
+			&cardholderName,
+			&bankingNumber,
+			&validUntill,
+			&cvv,
+			&textDataID,
+			&text,
 		)
 		if err != nil {
-			continue
+			return nil, err
+		}
+		cred.ID = id
+		if credID.Valid {
+			secrets := model.CredentialsData{
+				ID:       int(credID.Int32),
+				Login:    login.String,
+				Password: password.String,
+			}
+			cred.CredentialsData = &secrets
+		}
+		if bankDataID.Valid {
+			bankData := model.BankingCardData{
+				ID:             int(bankDataID.Int32),
+				Number:         bankingNumber.String,
+				ValidUntil:     validUntill.String,
+				CardholderName: cardholderName.String,
+				CVV:            cvv.String,
+			}
+			cred.BankingCardData = &bankData
+		}
+		if textDataID.Valid {
+			textData := model.TextData{
+				ID:   int(textDataID.Int32),
+				Data: text.String,
+			}
+			cred.TextData = &textData
 		}
 
 		qry := `
 			SELECT meta FROM metadata WHERE data_id=$1;	
 		`
-		rows, err = r.Conn.QueryContext(ctx, qry, id)
-		if err != nil {
-			return nil, err
+		metaRows, err2 := r.Conn.QueryContext(ctx, qry, id)
+		if err2 != nil {
+			return nil, err2
 		}
-		for rows.Next() {
+		for metaRows.Next() {
 			meta := model.Metadata{}
-			err = rows.Scan(&meta.Value)
-			if err != nil {
-				continue
+			err2 = metaRows.Scan(&meta.Value)
+			if err2 != nil {
+				return nil, err2
 			}
 			cred.Metadata = append(cred.Metadata, meta)
 		}

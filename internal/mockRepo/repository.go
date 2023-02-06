@@ -35,6 +35,20 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// DeleteData mocks base method.
+func (m *MockRepository) DeleteData(ctx context.Context, data model.Credentials, userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteData", ctx, data, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteData indicates an expected call of DeleteData.
+func (mr *MockRepositoryMockRecorder) DeleteData(ctx, data, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteData", reflect.TypeOf((*MockRepository)(nil).DeleteData), ctx, data, userID)
+}
+
 // GetCredentialsByName mocks base method.
 func (m *MockRepository) GetCredentialsByName(ctx context.Context, name string, userID int) ([]model.CredentialsData, error) {
 	m.ctrl.T.Helper()
@@ -148,4 +162,60 @@ func (m *MockRepository) SaveUser(ctx context.Context, user *model.User) error {
 func (mr *MockRepositoryMockRecorder) SaveUser(ctx, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveUser", reflect.TypeOf((*MockRepository)(nil).SaveUser), ctx, user)
+}
+
+// UpdateBankingCardData mocks base method.
+func (m *MockRepository) UpdateBankingCardData(ctx context.Context, data model.Credentials, userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateBankingCardData", ctx, data, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateBankingCardData indicates an expected call of UpdateBankingCardData.
+func (mr *MockRepositoryMockRecorder) UpdateBankingCardData(ctx, data, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBankingCardData", reflect.TypeOf((*MockRepository)(nil).UpdateBankingCardData), ctx, data, userID)
+}
+
+// UpdateBinaryData mocks base method.
+func (m *MockRepository) UpdateBinaryData(ctx context.Context, data model.Credentials, userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateBinaryData", ctx, data, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateBinaryData indicates an expected call of UpdateBinaryData.
+func (mr *MockRepositoryMockRecorder) UpdateBinaryData(ctx, data, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBinaryData", reflect.TypeOf((*MockRepository)(nil).UpdateBinaryData), ctx, data, userID)
+}
+
+// UpdateCredentialsData mocks base method.
+func (m *MockRepository) UpdateCredentialsData(ctx context.Context, data model.Credentials, userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCredentialsData", ctx, data, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateCredentialsData indicates an expected call of UpdateCredentialsData.
+func (mr *MockRepositoryMockRecorder) UpdateCredentialsData(ctx, data, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCredentialsData", reflect.TypeOf((*MockRepository)(nil).UpdateCredentialsData), ctx, data, userID)
+}
+
+// UpdateTextData mocks base method.
+func (m *MockRepository) UpdateTextData(ctx context.Context, data model.Credentials, userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTextData", ctx, data, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTextData indicates an expected call of UpdateTextData.
+func (mr *MockRepositoryMockRecorder) UpdateTextData(ctx, data, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTextData", reflect.TypeOf((*MockRepository)(nil).UpdateTextData), ctx, data, userID)
 }

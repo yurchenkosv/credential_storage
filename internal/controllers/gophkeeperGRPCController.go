@@ -6,15 +6,15 @@ import (
 	"github.com/yurchenkosv/credential_storage/internal/api"
 	"github.com/yurchenkosv/credential_storage/internal/contextKeys"
 	"github.com/yurchenkosv/credential_storage/internal/service"
-	"time"
+	"strconv"
 )
 
 type CredentialsGRPCController struct {
-	svc     *service.CredentialsService
+	svc     service.DataService
 	authSvc service.Auth
 }
 
-func NewGophkeeperController(svc *service.CredentialsService) *CredentialsGRPCController {
+func NewGophkeeperController(svc service.DataService) *CredentialsGRPCController {
 	return &CredentialsGRPCController{svc: svc}
 }
 
@@ -66,33 +66,44 @@ func (c CredentialsGRPCController) SaveBinaryData(ctx context.Context, data *api
 }
 func (c CredentialsGRPCController) GetData(ctx context.Context, data *api.AllDataRequest) (*api.SecretDataList, error) {
 	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
-	secretDataList := api.SecretDataList{}
 	creds, err := c.svc.GetAllUserCredentials(ctx, id)
+	secretDataList := &api.SecretDataList{}
 	if err != nil {
 		return nil, err
 	}
 	for _, secret := range creds {
-		msg := api.SecretsDataResponse{}
-		protoBank := &api.BankingCardData{
-			Number:         int32(secret.BankingCardData.Number),
-			ValidTill:      secret.BankingCardData.ValidUntil.Format(time.RFC3339),
-			CardholderName: secret.BankingCardData.CardholderName,
-			Cvv:            int32(secret.BankingCardData.CVV),
-			Metadata:       nil,
+		msg := api.SecretsDataResponse{Name: secret.Name}
+		if secret.BankingCardData != nil {
+			num, _ := strconv.ParseInt(secret.BankingCardData.Number, 10, 64)
+			cvv, _ := strconv.ParseInt(secret.BankingCardData.CVV, 10, 64)
+			protoBank := &api.BankingCardData{
+				Number:         int32(num),
+				ValidTill:      secret.BankingCardData.ValidUntil,
+				CardholderName: secret.BankingCardData.CardholderName,
+				Cvv:            int32(cvv),
+				Metadata:       nil,
+			}
+			msg.BankingData = protoBank
 		}
-		protoCred := &api.CredentialsData{
-			Login:    secret.CredentialsData.Login,
-			Password: secret.CredentialsData.Password,
-			Metadata: nil,
+		if secret.CredentialsData != nil {
+			protoCred := &api.CredentialsData{
+				Login:    secret.CredentialsData.Login,
+				Password: secret.CredentialsData.Password,
+				Metadata: nil,
+			}
+			msg.CredentialsData = protoCred
 		}
-		protoText := &api.TextData{
-			Data:     secret.TextData.Data,
-			Metadata: nil,
+		if secret.TextData != nil {
+			protoText := &api.TextData{
+				Data:     secret.TextData.Data,
+				Metadata: nil,
+			}
+			msg.TextData = protoText
 		}
-		msg.BankingData = protoBank
-		msg.CredentialsData = protoCred
-		msg.TextData = protoText
+		for _, meta := range secret.Metadata {
+			msg.Metadata = append(msg.Metadata, meta.Value)
+		}
 		secretDataList.Secrets = append(secretDataList.Secrets, &msg)
 	}
-	return nil, errors.New("not implemented")
+	return secretDataList, nil
 }
