@@ -39,7 +39,7 @@ func (s *CredentialsService) SaveTextData(ctx context.Context, data *model.TextD
 	return nil
 }
 
-func (s *CredentialsService) SaveBinaryData(ctx context.Context, data *model.CredentialsData, userID int) error {
+func (s *CredentialsService) SaveBinaryData(ctx context.Context, data *model.BinaryData, userID int) error {
 	return errors.New("Not implemented")
 }
 

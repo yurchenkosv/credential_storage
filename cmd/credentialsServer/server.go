@@ -40,7 +40,10 @@ func main() {
 
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)
 	authSvc := service.NewAuthService(repo, tokenAuth)
-	credentialsSvc := service.NewCredentialsService(repo)
+	credentialsSvc, err := service.NewProxyEncryptedCredentialService(repo, "testdatannn53543")
+	if err != nil {
+		log.Fatal(err)
+	}
 	authInterceptor := interceptors.NewAuthInterceptor(authSvc)
 
 	grpcAuthController := controllers.NewAuthGRPCController(authSvc)

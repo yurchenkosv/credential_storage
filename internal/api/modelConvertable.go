@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/yurchenkosv/credential_storage/internal/model"
-	"time"
+	"strconv"
 )
 
 func (x *CredentialsData) ToModel() *model.CredentialsData {
@@ -21,16 +21,10 @@ func (x *CredentialsData) ToModel() *model.CredentialsData {
 
 func (x *BankingCardData) ToModel() (*model.BankingCardData, error) {
 	modelData := model.BankingCardData{}
-
-	timeValidTill, err := time.Parse(time.RFC3339, x.GetValidTill())
-	if err != nil {
-		return nil, err
-	}
-
 	modelData.Name = x.GetName()
-	modelData.CVV = int(x.GetCvv())
-	modelData.ValidUntil = timeValidTill
-	modelData.Number = int(x.GetNumber())
+	modelData.CVV = strconv.Itoa(int(x.GetCvv()))
+	modelData.ValidUntil = x.GetValidTill()
+	modelData.Number = strconv.Itoa(int(x.GetNumber()))
 	modelData.CardholderName = x.GetCardholderName()
 	modelData.Metadata = convertMetadata(x.Metadata)
 	return &modelData, nil
