@@ -31,7 +31,6 @@ func (s *ClientCredentialsService) SendText(data model.TextData) error {
 	return s.client.SendText(s.ctx, data)
 }
 
-func (s *ClientCredentialsService) SendBinary(data []byte) error {
-	binary := model.BinaryData{Link: ""}
-	return s.client.SendBinary(s.ctx, binary)
+func (s *ClientCredentialsService) SendBinary(data model.BinaryData) error {
+	return s.client.SendBinary(s.ctx, data)
 }

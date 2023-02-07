@@ -102,7 +102,8 @@ func (s *CredentialServiceEncryptedProxy) GetAllUserCredentials(ctx context.Cont
 			cred.BankingCardData.CVV = string(decryptData([]byte(cred.BankingCardData.CVV), s.cypherBlock))
 		}
 		if cred.BinaryData != nil {
-			// TODO: add work with binary
+			cred.BinaryData.Data = decryptData(cred.BinaryData.Data, s.cypherBlock)
+			cred.BinaryData.Link = string(decryptData([]byte(cred.BinaryData.Link), s.cypherBlock))
 		}
 		cred.Name = string(decryptData([]byte(cred.Name), s.cypherBlock))
 		cred.Metadata = decryptMetadata(cred.Metadata, s.cypherBlock)

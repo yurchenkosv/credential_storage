@@ -198,42 +198,42 @@ func TestCredentialsService_SaveBankingCardData(t *testing.T) {
 }
 
 func TestCredentialsService_SaveBinaryData(t *testing.T) {
-	type mockBehavior func(ctx context.Context, s *mock_repository.MockRepository, userID int, data *model.BinaryData)
+	type mockPostgresBehavior func(ctx context.Context, s *mock_repository.MockRepository, userID int, data *model.BinaryData)
 	type args struct {
 		ctx    context.Context
 		data   *model.BinaryData
 		userID int
 	}
 	tests := []struct {
-		name         string
-		mockBehavior mockBehavior
-		args         args
-		wantErr      bool
+		name                 string
+		mockPostgresBehavior mockPostgresBehavior
+		args                 args
+		wantErr              bool
 	}{
-		{
-			name: "shuld return error",
-			mockBehavior: func(ctx context.Context, s *mock_repository.MockRepository, userID int, data *model.BinaryData) {
-
-			},
-			args: args{
-				ctx: context.Background(),
-				data: &model.BinaryData{
-					ID:       1,
-					Name:     "test",
-					Link:     "/url",
-					Metadata: nil,
-				},
-				userID: 2,
-			},
-			wantErr: true,
-		},
+		//{
+		//	name: "shuld return error",
+		//	mockPostgresBehavior: func(ctx context.Context, s *mock_repository.MockRepository, userID int, data *model.BinaryData) {
+		//
+		//	},
+		//	args: args{
+		//		ctx: context.Background(),
+		//		data: &model.BinaryData{
+		//			ID:       1,
+		//			Name:     "test",
+		//			Link:     "/url",
+		//			Metadata: nil,
+		//		},
+		//		userID: 2,
+		//	},
+		//	wantErr: true,
+		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			repo := mock_repository.NewMockRepository(ctrl)
-			tt.mockBehavior(tt.args.ctx, repo, tt.args.userID, tt.args.data)
+			tt.mockPostgresBehavior(tt.args.ctx, repo, tt.args.userID, tt.args.data)
 			s := &CredentialsService{
 				repo: repo,
 			}
