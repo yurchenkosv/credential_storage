@@ -455,7 +455,7 @@ func (r *PostgresRepository) Transactional(ctx context.Context, do func() error)
 	err = do()
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
+			log.Errorf("unable to rollback transaction: %v", rollbackErr)
 			return rollbackErr
 		}
 		return err
@@ -463,7 +463,7 @@ func (r *PostgresRepository) Transactional(ctx context.Context, do func() error)
 	err = tx.Commit()
 	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error("unable to rollback transaction: %v", rollbackErr)
+			log.Errorf("unable to rollback transaction: %v", rollbackErr)
 			return rollbackErr
 		}
 		return err
