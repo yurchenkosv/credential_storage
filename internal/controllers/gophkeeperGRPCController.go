@@ -25,7 +25,7 @@ func (c *CredentialsGRPCController) SaveCredentialsData(ctx context.Context, dat
 		return nil, err
 	}
 	return &api.ServerResponse{
-		Status:  0,
+		Status:  200,
 		Message: "Successfully saved data",
 	}, nil
 }
@@ -41,7 +41,7 @@ func (c CredentialsGRPCController) SaveBankingData(ctx context.Context, data *ap
 		return nil, err
 	}
 	return &api.ServerResponse{
-		Status:  0,
+		Status:  200,
 		Message: "Successfully saved data",
 	}, nil
 }
