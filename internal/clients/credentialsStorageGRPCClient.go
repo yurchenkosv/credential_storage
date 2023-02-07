@@ -155,8 +155,17 @@ func (c *CredentialsStorageGRPCClient) SendBankCard(ctx context.Context, data mo
 }
 
 func (c *CredentialsStorageGRPCClient) SendBinary(ctx context.Context, data model.BinaryData) error {
-	return errors.New("not implemented")
-
+	var meta []string
+	for _, m := range data.Metadata {
+		meta = append(meta, m.Value)
+	}
+	apiData := &api.BinaryData{
+		Data:     data.Data,
+		Name:     data.Name,
+		Metadata: meta,
+	}
+	_, err := c.credServiceClient.SaveBinaryData(ctx, apiData, c.opts...)
+	return err
 }
 
 func (c *CredentialsStorageGRPCClient) SendText(ctx context.Context, data model.TextData) error {

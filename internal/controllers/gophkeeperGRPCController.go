@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"github.com/yurchenkosv/credential_storage/internal/api"
 	"github.com/yurchenkosv/credential_storage/internal/contextKeys"
 	"github.com/yurchenkosv/credential_storage/internal/service"
@@ -55,14 +54,22 @@ func (c CredentialsGRPCController) SaveTextData(ctx context.Context, data *api.T
 		return nil, err
 	}
 	return &api.ServerResponse{
-		Status:  0,
+		Status:  200,
 		Message: "Successfully saved data",
 	}, nil
 }
 
 func (c CredentialsGRPCController) SaveBinaryData(ctx context.Context, data *api.BinaryData) (*api.ServerResponse, error) {
-	return nil, errors.New("not implemented")
-
+	modelData := data.ToModel()
+	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
+	err := c.svc.SaveBinaryData(ctx, modelData, id)
+	if err != nil {
+		return nil, err
+	}
+	return &api.ServerResponse{
+		Status:  200,
+		Message: "Successfully saved data",
+	}, nil
 }
 func (c CredentialsGRPCController) GetData(ctx context.Context, data *api.AllDataRequest) (*api.SecretDataList, error) {
 	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)

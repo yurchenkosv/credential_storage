@@ -38,6 +38,15 @@ func (x *TextData) ToModel() *model.TextData {
 	return &modelData
 }
 
+func (x *BinaryData) ToModel() *model.BinaryData {
+	modelData := model.BinaryData{
+		Data:     x.GetData(),
+		Name:     x.GetName(),
+		Metadata: convertMetadata(x.GetMetadata()),
+	}
+	return &modelData
+}
+
 func convertMetadata(m []string) []model.Metadata {
 	var metadata []model.Metadata
 	for _, meta := range m {

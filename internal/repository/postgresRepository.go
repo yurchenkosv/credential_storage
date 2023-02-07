@@ -191,13 +191,13 @@ func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID 
 		SELECT data.id, data.name, 
 		       cd.id, cd.login, cd.password,
 			   bcd.id, bcd.cardholder_name, bcd.number, bcd.valid_till, bcd.cvv,
-			   td.id, td.data
--- 			   bd.link
+			   td.id, td.data,
+			   bd.link
 		FROM data
 				FULL JOIN credentials_data cd ON data.credentials_data_id = cd.id
 				FULL JOIN banking_cards_data bcd ON bcd.id = data.banking_cards_data_id
 				FULL JOIN text_data td ON td.id = data.text_data_id
--- 				FULL JOIN binary_data bd ON bd.id = data.binary_data_id
+				FULL JOIN binary_data bd ON bd.id = data.binary_data_id
 		WHERE data.user_id=$1;
 	`
 	rows, err := r.Conn.QueryContext(ctx, query, userID)
@@ -219,6 +219,8 @@ func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID 
 			cvv            sql.NullString
 			textDataID     sql.NullInt32
 			text           sql.NullString
+			binaryID       sql.NullInt32
+			binaryLink     sql.NullString
 		)
 		err = rows.Scan(
 			&id,
@@ -262,6 +264,13 @@ func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID 
 				Data: text.String,
 			}
 			cred.TextData = &textData
+		}
+		if binaryID.Valid {
+			binaryData := model.BinaryData{
+				ID:   int(binaryID.Int32),
+				Link: binaryLink.String,
+			}
+			cred.BinaryData = &binaryData
 		}
 
 		qry := `

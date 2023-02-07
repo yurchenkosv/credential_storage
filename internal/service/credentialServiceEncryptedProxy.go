@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"github.com/yurchenkosv/credential_storage/internal/binaryRepository"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"github.com/yurchenkosv/credential_storage/internal/repository"
 	"io"
@@ -17,14 +18,18 @@ type CredentialServiceEncryptedProxy struct {
 	svc         *CredentialsService
 }
 
-func NewProxyEncryptedCredentialService(repo repository.Repository, encryptionKey string) (*CredentialServiceEncryptedProxy, error) {
+func NewProxyEncryptedCredentialService(
+	repo repository.Repository,
+	binaryRepo binaryRepository.BinaryRepository,
+	encryptionKey string,
+) (*CredentialServiceEncryptedProxy, error) {
 	block, err := initCypher(encryptionKey)
 	if err != nil {
 		return nil, err
 	}
 
 	return &CredentialServiceEncryptedProxy{
-		svc:         NewCredentialsService(repo),
+		svc:         NewCredentialsService(repo, binaryRepo),
 		cypherBlock: block,
 	}, nil
 }
@@ -61,10 +66,10 @@ func (s *CredentialServiceEncryptedProxy) SaveTextData(ctx context.Context,
 	return s.svc.SaveTextData(ctx, data, userID)
 }
 
-// TODO: upload binary
 func (s *CredentialServiceEncryptedProxy) SaveBinaryData(ctx context.Context,
 	data *model.BinaryData,
 	userID int) error {
+	data.Data = encryptData(s.cypherBlock, data.Data)
 	data.Name = string(encryptData(s.cypherBlock, []byte(data.Name)))
 	data.Metadata = encryptMetadata(data.Metadata, s.cypherBlock)
 	return s.svc.SaveBinaryData(ctx, data, userID)

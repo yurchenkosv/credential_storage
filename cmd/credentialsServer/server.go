@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/yurchenkosv/credential_storage/internal/binaryRepository"
 	"github.com/yurchenkosv/credential_storage/internal/interceptors"
 	"net"
 	"os"
@@ -40,7 +41,8 @@ func main() {
 
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)
 	authSvc := service.NewAuthService(repo, tokenAuth)
-	credentialsSvc, err := service.NewProxyEncryptedCredentialService(repo, "testdatannn53543")
+	binaryRepo := binaryRepository.NewLocalBinaryRepository("/tmp")
+	credentialsSvc, err := service.NewProxyEncryptedCredentialService(repo, binaryRepo, config.GetConfig().EncryptionSecret)
 	if err != nil {
 		log.Fatal(err)
 	}

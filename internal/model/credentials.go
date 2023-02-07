@@ -28,6 +28,7 @@ type TextData struct {
 
 type BinaryData struct {
 	ID       int
+	Data     []byte
 	Name     string     `json:"name"`
 	Link     string     `json:"link"`
 	Metadata []Metadata `json:"metadata"`
