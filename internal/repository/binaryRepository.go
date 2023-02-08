@@ -1,4 +1,4 @@
-package binaryRepository
+package repository
 
 type BinaryRepository interface {
 	Save(data []byte, filename string) (string, error)

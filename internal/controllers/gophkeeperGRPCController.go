@@ -9,11 +9,10 @@ import (
 )
 
 type CredentialsGRPCController struct {
-	svc     service.DataService
-	authSvc service.Auth
+	svc service.DataService
 }
 
-func NewGophkeeperController(svc service.DataService) *CredentialsGRPCController {
+func NewCredentialsGRPCController(svc service.DataService) *CredentialsGRPCController {
 	return &CredentialsGRPCController{svc: svc}
 }
 
@@ -79,11 +78,12 @@ func (c CredentialsGRPCController) GetData(ctx context.Context, data *api.AllDat
 		return nil, err
 	}
 	for _, secret := range creds {
-		msg := api.SecretsDataResponse{Name: secret.Name}
+		msg := api.SecretsDataResponse{Name: secret.Name, Id: int32(secret.ID)}
 		if secret.BankingCardData != nil {
 			num, _ := strconv.ParseInt(secret.BankingCardData.Number, 10, 64)
 			cvv, _ := strconv.ParseInt(secret.BankingCardData.CVV, 10, 64)
 			protoBank := &api.BankingCardData{
+				Id:             int32(secret.BankingCardData.ID),
 				Number:         int32(num),
 				ValidTill:      secret.BankingCardData.ValidUntil,
 				CardholderName: secret.BankingCardData.CardholderName,
@@ -94,6 +94,7 @@ func (c CredentialsGRPCController) GetData(ctx context.Context, data *api.AllDat
 		}
 		if secret.CredentialsData != nil {
 			protoCred := &api.CredentialsData{
+				Id:       int32(secret.CredentialsData.ID),
 				Login:    secret.CredentialsData.Login,
 				Password: secret.CredentialsData.Password,
 				Metadata: nil,
@@ -102,10 +103,18 @@ func (c CredentialsGRPCController) GetData(ctx context.Context, data *api.AllDat
 		}
 		if secret.TextData != nil {
 			protoText := &api.TextData{
+				Id:       int32(secret.TextData.ID),
 				Data:     secret.TextData.Data,
 				Metadata: nil,
 			}
 			msg.TextData = protoText
+		}
+		if secret.BinaryData != nil {
+			protoBinary := &api.BinaryData{
+				Id:   int32(secret.BinaryData.ID),
+				Data: secret.BinaryData.Data,
+			}
+			msg.BinaryData = protoBinary
 		}
 		for _, meta := range secret.Metadata {
 			msg.Metadata = append(msg.Metadata, meta.Value)

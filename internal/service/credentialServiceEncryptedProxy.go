@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"github.com/yurchenkosv/credential_storage/internal/binaryRepository"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"github.com/yurchenkosv/credential_storage/internal/repository"
 	"io"
@@ -15,12 +14,12 @@ import (
 
 type CredentialServiceEncryptedProxy struct {
 	cypherBlock cipher.Block
-	svc         *CredentialsService
+	svc         DataService
 }
 
 func NewProxyEncryptedCredentialService(
 	repo repository.Repository,
-	binaryRepo binaryRepository.BinaryRepository,
+	binaryRepo repository.BinaryRepository,
 	encryptionKey string,
 ) (*CredentialServiceEncryptedProxy, error) {
 	block, err := initCypher(encryptionKey)

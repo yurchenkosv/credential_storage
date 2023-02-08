@@ -3,17 +3,16 @@ package service
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/yurchenkosv/credential_storage/internal/binaryRepository"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"github.com/yurchenkosv/credential_storage/internal/repository"
 )
 
 type CredentialsService struct {
 	repo       repository.Repository
-	binaryRepo binaryRepository.BinaryRepository
+	binaryRepo repository.BinaryRepository
 }
 
-func NewCredentialsService(repo repository.Repository, binaryRepo binaryRepository.BinaryRepository) *CredentialsService {
+func NewCredentialsService(repo repository.Repository, binaryRepo repository.BinaryRepository) *CredentialsService {
 	return &CredentialsService{
 		repo:       repo,
 		binaryRepo: binaryRepo,

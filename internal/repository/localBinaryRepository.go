@@ -1,4 +1,4 @@
-package binaryRepository
+package repository
 
 import (
 	"fmt"

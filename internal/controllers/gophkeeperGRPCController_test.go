@@ -2,36 +2,109 @@ package controllers
 
 import (
 	"context"
+	"github.com/golang/mock/gomock"
 	"github.com/yurchenkosv/credential_storage/internal/api"
-	"github.com/yurchenkosv/credential_storage/internal/service"
+	"github.com/yurchenkosv/credential_storage/internal/contextKeys"
+	mock_service "github.com/yurchenkosv/credential_storage/internal/mockService"
+	"github.com/yurchenkosv/credential_storage/internal/model"
 	"reflect"
 	"testing"
 )
 
 func TestCredentialsGRPCController_GetData(t *testing.T) {
-	type fields struct {
-		svc     service.DataService
-		authSvc service.Auth
-	}
+	type mockBehavior func(ctx context.Context, s *mock_service.MockDataService, data []model.Credentials)
 	type args struct {
-		ctx  context.Context
-		data *api.AllDataRequest
+		ctx   context.Context
+		data  *api.AllDataRequest
+		creds []model.Credentials
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *api.SecretDataList
-		wantErr bool
+		name         string
+		mockBehavior mockBehavior
+		args         args
+		want         *api.SecretDataList
+		wantErr      bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should return all user creds in grpc format",
+			mockBehavior: func(ctx context.Context, s *mock_service.MockDataService, data []model.Credentials) {
+				s.EXPECT().GetAllUserCredentials(ctx, 1).Return(data, nil)
+			},
+			args: args{
+				ctx:  context.WithValue(context.Background(), contextKeys.UserIDContexKey("user_id"), 1),
+				data: &api.AllDataRequest{},
+				creds: []model.Credentials{
+					{
+						ID:   1,
+						Name: "testCredentials",
+						CredentialsData: &model.CredentialsData{
+							ID:       1,
+							Login:    "test_login",
+							Password: "test_pwd",
+						},
+						BankingCardData: &model.BankingCardData{
+							ID:             1,
+							Number:         "382492873",
+							ValidUntil:     "10/25",
+							CardholderName: "test holder",
+							CVV:            "423",
+						},
+						TextData: &model.TextData{
+							ID:   1,
+							Data: "text",
+						},
+						BinaryData: &model.BinaryData{
+							ID:   1,
+							Data: []byte("test"),
+							Link: "/tmp/link",
+						},
+						Metadata: []model.Metadata{
+							{
+								Value: "test",
+							},
+						},
+					},
+				},
+			},
+			want: &api.SecretDataList{
+				Secrets: []*api.SecretsDataResponse{
+					{
+						Name: "testCredentials",
+						CredentialsData: &api.CredentialsData{
+							Login:    "test_login",
+							Password: "test_pwd",
+							Id:       1,
+						},
+						BankingData: &api.BankingCardData{
+							Number:         int32(382492873),
+							ValidTill:      "10/25",
+							CardholderName: "test holder",
+							Cvv:            423,
+							Id:             1,
+						},
+						TextData: &api.TextData{
+							Data: "text",
+							Id:   1,
+						},
+						BinaryData: &api.BinaryData{
+							Id:   1,
+							Data: []byte("test"),
+						},
+						Metadata: []string{"test"},
+						Id:       1,
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := CredentialsGRPCController{
-				svc:     tt.fields.svc,
-				authSvc: tt.fields.authSvc,
-			}
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			svc := mock_service.NewMockDataService(ctrl)
+			tt.mockBehavior(tt.args.ctx, svc, tt.args.creds)
+			c := NewCredentialsGRPCController(svc)
 			got, err := c.GetData(tt.args.ctx, tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetData() error = %v, wantErr %v", err, tt.wantErr)
@@ -45,29 +118,55 @@ func TestCredentialsGRPCController_GetData(t *testing.T) {
 }
 
 func TestCredentialsGRPCController_SaveBankingData(t *testing.T) {
-	type fields struct {
-		svc     service.DataService
-		authSvc service.Auth
-	}
+	type mockBehavior func(ctx context.Context, s *mock_service.MockDataService, data *model.BankingCardData)
 	type args struct {
-		ctx  context.Context
-		data *api.BankingCardData
+		ctx      context.Context
+		data     *api.BankingCardData
+		bankData *model.BankingCardData
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *api.ServerResponse
-		wantErr bool
+		name         string
+		mockBehavior mockBehavior
+		args         args
+		want         *api.ServerResponse
+		wantErr      bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should save bank data",
+			mockBehavior: func(ctx context.Context, s *mock_service.MockDataService, data *model.BankingCardData) {
+				s.EXPECT().SaveBankingCardData(ctx, data, 1).Return(nil)
+			},
+			args: args{
+				ctx: context.WithValue(context.Background(), contextKeys.UserIDContexKey("user_id"), 1),
+				data: &api.BankingCardData{
+					Number:         147433,
+					ValidTill:      "10/26",
+					CardholderName: "card holder",
+					Cvv:            123,
+					Name:           "test data",
+				},
+				bankData: &model.BankingCardData{
+					Name:           "test data",
+					Number:         "147433",
+					ValidUntil:     "10/26",
+					CardholderName: "card holder",
+					CVV:            "123",
+				},
+			},
+			want: &api.ServerResponse{
+				Status:  200,
+				Message: "Successfully saved data",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := CredentialsGRPCController{
-				svc:     tt.fields.svc,
-				authSvc: tt.fields.authSvc,
-			}
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			svc := mock_service.NewMockDataService(ctrl)
+			tt.mockBehavior(tt.args.ctx, svc, tt.args.bankData)
+			c := NewCredentialsGRPCController(svc)
 			got, err := c.SaveBankingData(tt.args.ctx, tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SaveBankingData() error = %v, wantErr %v", err, tt.wantErr)
@@ -81,29 +180,49 @@ func TestCredentialsGRPCController_SaveBankingData(t *testing.T) {
 }
 
 func TestCredentialsGRPCController_SaveBinaryData(t *testing.T) {
-	type fields struct {
-		svc     service.DataService
-		authSvc service.Auth
-	}
+	type mockBehavior func(ctx context.Context, s *mock_service.MockDataService, data *model.BinaryData)
 	type args struct {
-		ctx  context.Context
-		data *api.BinaryData
+		ctx        context.Context
+		data       *api.BinaryData
+		binaryData *model.BinaryData
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *api.ServerResponse
-		wantErr bool
+		name         string
+		mockBehavior mockBehavior
+		args         args
+		want         *api.ServerResponse
+		wantErr      bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should save binary",
+			mockBehavior: func(ctx context.Context, s *mock_service.MockDataService, data *model.BinaryData) {
+				s.EXPECT().SaveBinaryData(ctx, data, 1)
+			},
+			args: args{
+				ctx: context.WithValue(context.Background(), contextKeys.UserIDContexKey("user_id"), 1),
+				data: &api.BinaryData{
+					Data: []byte("test"),
+					Name: "test",
+				},
+				binaryData: &model.BinaryData{
+					Data: []byte("test"),
+					Name: "test",
+				},
+			},
+			want: &api.ServerResponse{
+				Status:  200,
+				Message: "Successfully saved data",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := CredentialsGRPCController{
-				svc:     tt.fields.svc,
-				authSvc: tt.fields.authSvc,
-			}
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			svc := mock_service.NewMockDataService(ctrl)
+			tt.mockBehavior(tt.args.ctx, svc, tt.args.binaryData)
+			c := NewCredentialsGRPCController(svc)
 			got, err := c.SaveBinaryData(tt.args.ctx, tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SaveBinaryData() error = %v, wantErr %v", err, tt.wantErr)
@@ -117,29 +236,51 @@ func TestCredentialsGRPCController_SaveBinaryData(t *testing.T) {
 }
 
 func TestCredentialsGRPCController_SaveCredentialsData(t *testing.T) {
-	type fields struct {
-		svc     service.DataService
-		authSvc service.Auth
-	}
+	type mockBehavior func(ctx context.Context, s *mock_service.MockDataService, data *model.CredentialsData)
 	type args struct {
-		ctx  context.Context
-		data *api.CredentialsData
+		ctx      context.Context
+		data     *api.CredentialsData
+		credData *model.CredentialsData
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *api.ServerResponse
-		wantErr bool
+		name         string
+		mockBehavior mockBehavior
+		args         args
+		want         *api.ServerResponse
+		wantErr      bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should save credentials data",
+			mockBehavior: func(ctx context.Context, s *mock_service.MockDataService, data *model.CredentialsData) {
+				s.EXPECT().SaveCredentialsData(ctx, data, 1).Return(nil)
+			},
+			args: args{
+				ctx: context.WithValue(context.Background(), contextKeys.UserIDContexKey("user_id"), 1),
+				data: &api.CredentialsData{
+					Login:    "test",
+					Password: "test_pwd",
+					Name:     "test",
+				},
+				credData: &model.CredentialsData{
+					Name:     "test",
+					Login:    "test",
+					Password: "test_pwd",
+				},
+			},
+			want: &api.ServerResponse{
+				Status:  200,
+				Message: "Successfully saved data",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &CredentialsGRPCController{
-				svc:     tt.fields.svc,
-				authSvc: tt.fields.authSvc,
-			}
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			svc := mock_service.NewMockDataService(ctrl)
+			tt.mockBehavior(tt.args.ctx, svc, tt.args.credData)
+			c := NewCredentialsGRPCController(svc)
 			got, err := c.SaveCredentialsData(tt.args.ctx, tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SaveCredentialsData() error = %v, wantErr %v", err, tt.wantErr)
@@ -153,29 +294,49 @@ func TestCredentialsGRPCController_SaveCredentialsData(t *testing.T) {
 }
 
 func TestCredentialsGRPCController_SaveTextData(t *testing.T) {
-	type fields struct {
-		svc     service.DataService
-		authSvc service.Auth
-	}
+	type mockBehavior func(ctx context.Context, s *mock_service.MockDataService, data *model.TextData)
 	type args struct {
-		ctx  context.Context
-		data *api.TextData
+		ctx      context.Context
+		data     *api.TextData
+		textData *model.TextData
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *api.ServerResponse
-		wantErr bool
+		name         string
+		mockBehavior mockBehavior
+		args         args
+		want         *api.ServerResponse
+		wantErr      bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should save text data",
+			mockBehavior: func(ctx context.Context, s *mock_service.MockDataService, data *model.TextData) {
+				s.EXPECT().SaveTextData(ctx, data, 1).Return(nil)
+			},
+			args: args{
+				ctx: context.WithValue(context.Background(), contextKeys.UserIDContexKey("user_id"), 1),
+				data: &api.TextData{
+					Data: "text",
+					Name: "test text",
+				},
+				textData: &model.TextData{
+					Name: "test text",
+					Data: "text",
+				},
+			},
+			want: &api.ServerResponse{
+				Status:  200,
+				Message: "Successfully saved data",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := CredentialsGRPCController{
-				svc:     tt.fields.svc,
-				authSvc: tt.fields.authSvc,
-			}
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			svc := mock_service.NewMockDataService(ctrl)
+			tt.mockBehavior(tt.args.ctx, svc, tt.args.textData)
+			c := NewCredentialsGRPCController(svc)
 			got, err := c.SaveTextData(tt.args.ctx, tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SaveTextData() error = %v, wantErr %v", err, tt.wantErr)
@@ -183,26 +344,6 @@ func TestCredentialsGRPCController_SaveTextData(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("SaveTextData() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestNewGophkeeperController(t *testing.T) {
-	type args struct {
-		svc service.DataService
-	}
-	tests := []struct {
-		name string
-		args args
-		want *CredentialsGRPCController
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewGophkeeperController(tt.args.svc); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewGophkeeperController() = %v, want %v", got, tt.want)
 			}
 		})
 	}

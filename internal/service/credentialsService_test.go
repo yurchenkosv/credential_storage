@@ -198,7 +198,14 @@ func TestCredentialsService_SaveBankingCardData(t *testing.T) {
 }
 
 func TestCredentialsService_SaveBinaryData(t *testing.T) {
-	type mockPostgresBehavior func(ctx context.Context, s *mock_repository.MockRepository, userID int, data *model.BinaryData)
+	type mockPostgresBehavior func(ctx context.Context,
+		s *mock_repository.MockRepository,
+		userID int,
+		data *model.BinaryData, link string)
+	type mockBinaryBehavior func(ctx context.Context,
+		s *mock_repository.MockBinaryRepository,
+		data []byte,
+		filename string)
 	type args struct {
 		ctx    context.Context
 		data   *model.BinaryData
@@ -207,20 +214,28 @@ func TestCredentialsService_SaveBinaryData(t *testing.T) {
 	tests := []struct {
 		name                 string
 		mockPostgresBehavior mockPostgresBehavior
+		mockBinaryBehavior   mockBinaryBehavior
 		args                 args
 		wantErr              bool
 	}{
 		//{
-		//	name: "shuld return error",
-		//	mockPostgresBehavior: func(ctx context.Context, s *mock_repository.MockRepository, userID int, data *model.BinaryData) {
-		//
+		//	name: "should save binary data",
+		//	mockPostgresBehavior: func(ctx context.Context,
+		//		s *mock_repository.MockRepository,
+		//		userID int, data *model.BinaryData,
+		//		link string) {
+		//		s.EXPECT().SaveBinaryData(ctx, data, userID, link).Return(nil)
+		//	},
+		//	mockBinaryBehavior: func(ctx context.Context,
+		//		s *mock_repository.MockBinaryRepository,
+		//		data []byte, filename string) {
+		//		s.EXPECT().Save(data, filename).Return("/tmp/test_file", nil)
 		//	},
 		//	args: args{
 		//		ctx: context.Background(),
 		//		data: &model.BinaryData{
-		//			ID:       1,
 		//			Name:     "test",
-		//			Link:     "/url",
+		//			Data:     []byte("test"),
 		//			Metadata: nil,
 		//		},
 		//		userID: 2,
@@ -233,9 +248,12 @@ func TestCredentialsService_SaveBinaryData(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			repo := mock_repository.NewMockRepository(ctrl)
-			tt.mockPostgresBehavior(tt.args.ctx, repo, tt.args.userID, tt.args.data)
+			binaryRepo := mock_repository.NewMockBinaryRepository(ctrl)
+			tt.mockPostgresBehavior(tt.args.ctx, repo, tt.args.userID, tt.args.data, "/tmp/test_file")
+			tt.mockBinaryBehavior(tt.args.ctx, binaryRepo, tt.args.data.Data, "test_file")
 			s := &CredentialsService{
-				repo: repo,
+				repo:       repo,
+				binaryRepo: binaryRepo,
 			}
 			if err := s.SaveBinaryData(tt.args.ctx, tt.args.data, tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("SaveBinaryData() error = %v, wantErr %v", err, tt.wantErr)

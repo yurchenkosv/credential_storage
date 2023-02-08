@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/credential_storage/internal/binaryRepository"
 	"github.com/yurchenkosv/credential_storage/internal/interceptors"
 	"net"
 	"os"
@@ -41,7 +40,7 @@ func main() {
 
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)
 	authSvc := service.NewAuthService(repo, tokenAuth)
-	binaryRepo := binaryRepository.NewLocalBinaryRepository("/tmp")
+	binaryRepo := repository.NewLocalBinaryRepository("/tmp")
 	credentialsSvc, err := service.NewProxyEncryptedCredentialService(repo, binaryRepo, config.GetConfig().EncryptionSecret)
 	if err != nil {
 		log.Fatal(err)
@@ -49,7 +48,7 @@ func main() {
 	authInterceptor := interceptors.NewAuthInterceptor(authSvc)
 
 	grpcAuthController := controllers.NewAuthGRPCController(authSvc)
-	credentialsController := controllers.NewGophkeeperController(credentialsSvc)
+	credentialsController := controllers.NewCredentialsGRPCController(credentialsSvc)
 	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.JWTInterceptor))
 
 	api.RegisterAuthServiceServer(grpcServer, grpcAuthController)
