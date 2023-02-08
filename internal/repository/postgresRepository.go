@@ -143,7 +143,7 @@ func (r *PostgresRepository) SaveTextData(ctx context.Context, data *model.TextD
 		}
 		query = `
 			INSERT INTO data(user_id, name, text_data_id)
-			VALUES ($1, currval(pg_get_serial_sequence('text_data', 'id')));
+			VALUES ($1, $2, currval(pg_get_serial_sequence('text_data', 'id')));
 		`
 		_, err = r.Conn.ExecContext(ctx, query, userID, data.Name)
 		if err != nil {
@@ -192,7 +192,7 @@ func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID 
 		       cd.id, cd.login, cd.password,
 			   bcd.id, bcd.cardholder_name, bcd.number, bcd.valid_till, bcd.cvv,
 			   td.id, td.data,
-			   bd.link
+			   bd.id, bd.link
 		FROM data
 				FULL JOIN credentials_data cd ON data.credentials_data_id = cd.id
 				FULL JOIN banking_cards_data bcd ON bcd.id = data.banking_cards_data_id
@@ -235,6 +235,8 @@ func (r *PostgresRepository) GetCredentialsByUserID(ctx context.Context, userID 
 			&cvv,
 			&textDataID,
 			&text,
+			&binaryID,
+			&binaryLink,
 		)
 		if err != nil {
 			return nil, err
@@ -298,30 +300,29 @@ func (r *PostgresRepository) GetCredentialsByName(ctx context.Context, name stri
 	return nil, errors.New("not implemented")
 }
 
-func (r *PostgresRepository) UpdateBankingCardData(ctx context.Context, data model.Credentials, userID int) error {
+func (r *PostgresRepository) UpdateBankingCardData(ctx context.Context, data model.BankingCardData, userID int) error {
 	err := r.Transactional(ctx, func() error {
 		query := `
 			UPDATE data SET name=$1
 			WHERE user_id=$2 AND banking_cards_data_id=$3;
 		`
-		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.BankingCardData.ID)
+		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.ID)
 		if err != nil {
 			return err
 		}
 		query = `
-			UPDATE banking_cards_data SET cvv=$1, valid_till=$2, number=$3, cardholder_name=$4
-			FROM banking_cards_data
-				JOIN data d ON banking_cards_data.id = d.banking_cards_data_id
-			WHERE d.name=$5 AND d.user_id=$6;
+			UPDATE banking_cards_data  SET cvv=$1, valid_till=$2, number=$3, cardholder_name=$4
+			FROM data d
+			WHERE banking_cards_data.id=$5 AND d.user_id=$6;
 		`
-		bankingData := data.BankingCardData
+		bankingData := data
 		_, err = r.Conn.ExecContext(ctx,
 			query,
 			bankingData.CVV,
 			bankingData.ValidUntil,
 			bankingData.Number,
 			bankingData.CardholderName,
-			bankingData.Name,
+			bankingData.ID,
 			userID)
 		if err != nil {
 			return err
@@ -332,20 +333,21 @@ func (r *PostgresRepository) UpdateBankingCardData(ctx context.Context, data mod
 	return err
 }
 
-func (r *PostgresRepository) UpdateCredentialsData(ctx context.Context, data model.Credentials, userID int) error {
+func (r *PostgresRepository) UpdateCredentialsData(ctx context.Context, data model.CredentialsData, userID int) error {
 	err := r.Transactional(ctx, func() error {
 		query := `
 			UPDATE data SET name=$1
 			WHERE user_id=$2 AND credentials_data_id=$3 
 		`
-		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.CredentialsData.ID)
+		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.ID)
 		if err != nil {
 			return err
 		}
-		credentialsData := data.CredentialsData
+		credentialsData := data
 		query = `
 			UPDATE credentials_data set login=$1, password=$2
-			WHERE id=$3 AND user_id=$4
+			                        FROM data d
+			WHERE credentials_data.id=$3 AND d.user_id=$4
 		`
 		_, err = r.Conn.ExecContext(ctx,
 			query,
@@ -365,20 +367,21 @@ func (r *PostgresRepository) UpdateCredentialsData(ctx context.Context, data mod
 	return err
 }
 
-func (r *PostgresRepository) UpdateTextData(ctx context.Context, data model.Credentials, userID int) error {
+func (r *PostgresRepository) UpdateTextData(ctx context.Context, data model.TextData, userID int) error {
 	err := r.Transactional(ctx, func() error {
 		query := `
 			UPDATE data SET name=$1
-			WHERE user_id=$2 AND credentials_data_id=$3 
+			WHERE user_id=$2 AND text_data_id=$3 
 		`
-		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.CredentialsData.ID)
+		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.ID)
 		if err != nil {
 			return err
 		}
-		textData := data.TextData
+		textData := data
 		query = `
 			UPDATE text_data SET data = $1
-			WHERE id=$2 AND user_id=$3
+			                 FROM data d
+			WHERE text_data.id=$2 AND d.user_id=$3
 		`
 		_, err = r.Conn.ExecContext(ctx, query, textData.Data, textData.ID, userID)
 		if err != nil {
@@ -393,21 +396,22 @@ func (r *PostgresRepository) UpdateTextData(ctx context.Context, data model.Cred
 	return err
 }
 
-func (r *PostgresRepository) UpdateBinaryData(ctx context.Context, data model.Credentials, userID int) error {
+func (r *PostgresRepository) UpdateBinaryData(ctx context.Context, data model.BinaryData, userID int) error {
 	err := r.Transactional(ctx, func() error {
 		query := `
 			UPDATE data SET name=$1
-			WHERE user_id=$2 AND credentials_data_id=$3 
+			WHERE user_id=$2 AND binary_data_id=$3 
 		`
-		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.CredentialsData.ID)
+		_, err := r.Conn.ExecContext(ctx, query, data.Name, userID, data.ID)
 		if err != nil {
 			return err
 		}
 		query = `
 			UPDATE binary_data SET link=$1
-			WHERE id=$2 AND user_id=$3
+			                   FROM data d
+			WHERE binary_data.id=$2 AND d.user_id=$3
 		`
-		_, err = r.Conn.ExecContext(ctx, query, data.BinaryData.Link, data.BinaryData.ID, userID)
+		_, err = r.Conn.ExecContext(ctx, query, data.Link, data.ID, userID)
 		if err != nil {
 			return err
 		}
@@ -498,14 +502,26 @@ func (r *PostgresRepository) saveMetadata(ctx context.Context, metadata []model.
 }
 
 func (r *PostgresRepository) updateMetadata(ctx context.Context, metadata []model.Metadata, dataID int) error {
+	var id int
 	if len(metadata) == 0 {
 		return nil
 	}
 	query := `
+		SELECT id FROM data WHERE 
+		                        banking_cards_data_id = $1 OR
+		                        binary_data_id = $1 OR 
+		                        text_data_id = $1 OR 
+		                        credentials_data_id = $1;
+	`
+	err := r.Conn.QueryRowContext(ctx, query, dataID).Scan(&id)
+	if err != nil {
+		return err
+	}
+	query = `
 		DELETE FROM metadata
 		WHERE data_id=$1
 	`
-	_, err := r.Conn.ExecContext(ctx, query, dataID)
+	_, err = r.Conn.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -514,7 +530,7 @@ func (r *PostgresRepository) updateMetadata(ctx context.Context, metadata []mode
 		VALUES($1, $2)
 	`
 	for _, meta := range metadata {
-		_, err = r.Conn.ExecContext(ctx, query, dataID, meta.Value)
+		_, err = r.Conn.ExecContext(ctx, query, id, meta.Value)
 		if err != nil {
 			log.Error("cannot insert metadata ", err)
 		}

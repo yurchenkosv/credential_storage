@@ -165,7 +165,7 @@ func (mr *MockRepositoryMockRecorder) SaveUser(ctx, user interface{}) *gomock.Ca
 }
 
 // UpdateBankingCardData mocks base method.
-func (m *MockRepository) UpdateBankingCardData(ctx context.Context, data model.Credentials, userID int) error {
+func (m *MockRepository) UpdateBankingCardData(ctx context.Context, data model.BankingCardData, userID int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateBankingCardData", ctx, data, userID)
 	ret0, _ := ret[0].(error)
@@ -179,7 +179,7 @@ func (mr *MockRepositoryMockRecorder) UpdateBankingCardData(ctx, data, userID in
 }
 
 // UpdateBinaryData mocks base method.
-func (m *MockRepository) UpdateBinaryData(ctx context.Context, data model.Credentials, userID int) error {
+func (m *MockRepository) UpdateBinaryData(ctx context.Context, data model.BinaryData, userID int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateBinaryData", ctx, data, userID)
 	ret0, _ := ret[0].(error)
@@ -193,7 +193,7 @@ func (mr *MockRepositoryMockRecorder) UpdateBinaryData(ctx, data, userID interfa
 }
 
 // UpdateCredentialsData mocks base method.
-func (m *MockRepository) UpdateCredentialsData(ctx context.Context, data model.Credentials, userID int) error {
+func (m *MockRepository) UpdateCredentialsData(ctx context.Context, data model.CredentialsData, userID int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateCredentialsData", ctx, data, userID)
 	ret0, _ := ret[0].(error)
@@ -207,7 +207,7 @@ func (mr *MockRepositoryMockRecorder) UpdateCredentialsData(ctx, data, userID in
 }
 
 // UpdateTextData mocks base method.
-func (m *MockRepository) UpdateTextData(ctx context.Context, data model.Credentials, userID int) error {
+func (m *MockRepository) UpdateTextData(ctx context.Context, data model.TextData, userID int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTextData", ctx, data, userID)
 	ret0, _ := ret[0].(error)

@@ -14,10 +14,10 @@ type Repository interface {
 	SaveTextData(ctx context.Context, data *model.TextData, userID int) error
 	SaveBinaryData(ctx context.Context, data *model.BinaryData, userID int, link string) error
 
-	UpdateBankingCardData(ctx context.Context, data model.Credentials, userID int) error
-	UpdateCredentialsData(ctx context.Context, data model.Credentials, userID int) error
-	UpdateTextData(ctx context.Context, data model.Credentials, userID int) error
-	UpdateBinaryData(ctx context.Context, data model.Credentials, userID int) error
+	UpdateBankingCardData(ctx context.Context, data model.BankingCardData, userID int) error
+	UpdateCredentialsData(ctx context.Context, data model.CredentialsData, userID int) error
+	UpdateTextData(ctx context.Context, data model.TextData, userID int) error
+	UpdateBinaryData(ctx context.Context, data model.BinaryData, userID int) error
 
 	DeleteData(ctx context.Context, data model.Credentials, userID int) error
 
