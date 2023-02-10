@@ -6,8 +6,10 @@ import (
 	"github.com/yurchenkosv/credential_storage/internal/clients"
 	"github.com/yurchenkosv/credential_storage/internal/configProvider"
 	"github.com/yurchenkosv/credential_storage/internal/service"
+	"github.com/yurchenkosv/credential_storage/internal/view"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 func main() {
@@ -24,19 +26,14 @@ func main() {
 	client := clients.NewCredentialsStorageGRPCClient(conn)
 	authSvc := service.NewClientAuthService(client)
 	jwt, err := authSvc.Authenticate(ctx, cfg.GetConfig().Login, cfg.GetConfig().Password)
-	ctx = context.WithValue(ctx, "jwt", jwt)
+	meta := metadata.New(map[string]string{"jwt": jwt})
+	ctx = metadata.NewOutgoingContext(ctx, meta)
 	if err != nil {
 		log.Fatal("cannot authenticate on server ", err)
 	}
 	credSvc := service.NewClientCredentialsService(ctx, client)
-	_, err = credSvc.GetData()
-	creds, err := credSvc.GetData()
-	if err != nil {
+	tui := view.NewTUI(credSvc, ctx)
+	if err = tui.RunApp(); err != nil {
 		log.Fatal(err)
 	}
-	for idx, cred := range creds {
-		log.Infof("cred %d, value %v\n", idx, cred.Name)
-	}
-	log.Infof("returned creds %v", creds)
-
 }

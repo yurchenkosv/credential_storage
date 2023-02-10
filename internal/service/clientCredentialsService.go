@@ -15,7 +15,7 @@ func NewClientCredentialsService(ctx context.Context, client clients.Credentials
 	return &ClientCredentialsService{client: client, ctx: ctx}
 }
 
-func (s ClientCredentialsService) GetData() ([]model.Credentials, error) {
+func (s *ClientCredentialsService) GetData() ([]model.Credentials, error) {
 	return s.client.GetData(s.ctx)
 }
 

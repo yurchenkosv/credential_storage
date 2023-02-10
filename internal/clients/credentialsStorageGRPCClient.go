@@ -60,11 +60,8 @@ func (c *CredentialsStorageGRPCClient) RegisterUser(ctx context.Context, user mo
 }
 
 func (c *CredentialsStorageGRPCClient) GetData(ctx context.Context) ([]model.Credentials, error) {
-	jwt := ctx.Value("jwt").(string)
-	md := metadata.Pairs("jwt", jwt)
-	outCtx := metadata.NewOutgoingContext(context.Background(), md)
 	creds := []model.Credentials{}
-	apiCreds, err := c.credServiceClient.GetData(outCtx, &api.AllDataRequest{}, c.opts...)
+	apiCreds, err := c.credServiceClient.GetData(ctx, &api.AllDataRequest{}, c.opts...)
 	if err != nil {
 		return []model.Credentials{}, err
 	}
@@ -95,6 +92,14 @@ func (c *CredentialsStorageGRPCClient) GetData(ctx context.Context) ([]model.Cre
 				Metadata:       nil,
 			}
 			credentials.BankingCardData = &bankingData
+		}
+		if secret.BinaryData != nil {
+			binaryData := model.BinaryData{
+				ID:       int(secret.BinaryData.Id),
+				Data:     secret.BinaryData.Data,
+				Metadata: nil,
+			}
+			credentials.BinaryData = &binaryData
 		}
 		if secret.TextData != nil {
 			textData := model.TextData{
