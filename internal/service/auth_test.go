@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/golang/mock/gomock"
+	log "github.com/sirupsen/logrus"
 	mock_repository "github.com/yurchenkosv/credential_storage/internal/mockRepo"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"google.golang.org/grpc/metadata"
@@ -22,7 +23,10 @@ func createToken(key string, claims map[string]interface{}) string {
 
 	jwtauth.SetIssuedAt(claims, currentTime)
 	jwtauth.SetExpiry(claims, currentTime.Add(5*time.Minute))
-	_, token, _ := auth.Encode(claims)
+	_, token, err := auth.Encode(claims)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return token
 }
 

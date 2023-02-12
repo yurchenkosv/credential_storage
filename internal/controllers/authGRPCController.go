@@ -8,6 +8,7 @@ import (
 	"github.com/yurchenkosv/credential_storage/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"net/http"
 )
 
 type AuthGRPCController struct {
@@ -43,7 +44,7 @@ func (c *AuthGRPCController) RegisterUser(ctx context.Context,
 	grpc.SendHeader(ctx, header)
 	response := api.ServerAuthResponse{
 		Message: "Successfully registered",
-		Code:    200,
+		Code:    http.StatusOK,
 	}
 	return &response, nil
 }
@@ -69,6 +70,6 @@ func (c *AuthGRPCController) AuthenticateUser(ctx context.Context,
 	grpc.SendHeader(ctx, header)
 	return &api.ServerAuthResponse{
 		Message: "Successfully authorized",
-		Code:    200,
+		Code:    http.StatusOK,
 	}, nil
 }

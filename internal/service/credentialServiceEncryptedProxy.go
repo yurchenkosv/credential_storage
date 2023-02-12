@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
@@ -66,12 +67,20 @@ func (s *CredentialServiceEncryptedProxy) SaveTextData(ctx context.Context,
 }
 
 func (s *CredentialServiceEncryptedProxy) SaveBinaryData(ctx context.Context,
+	reader io.Reader,
 	data *model.BinaryData,
 	userID int) error {
-	data.Data = encryptData(s.cypherBlock, data.Data)
+
+	var byteData []byte
+	_, err := reader.Read(byteData)
+	if err != nil {
+		return err
+	}
+
+	encryptedReader := bytes.NewReader(encryptData(s.cypherBlock, byteData))
 	data.Name = string(encryptData(s.cypherBlock, []byte(data.Name)))
 	data.Metadata = encryptMetadata(data.Metadata, s.cypherBlock)
-	return s.svc.SaveBinaryData(ctx, data, userID)
+	return s.svc.SaveBinaryData(ctx, encryptedReader, data, userID)
 }
 
 func (s *CredentialServiceEncryptedProxy) GetCredentialsByName(ctx context.Context,

@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"github.com/yurchenkosv/credential_storage/internal/repository"
+	"io"
 )
 
 type CredentialsService struct {
@@ -43,9 +44,9 @@ func (s *CredentialsService) SaveTextData(ctx context.Context, data *model.TextD
 	return nil
 }
 
-func (s *CredentialsService) SaveBinaryData(ctx context.Context, data *model.BinaryData, userID int) error {
+func (s *CredentialsService) SaveBinaryData(ctx context.Context, reader io.Reader, data *model.BinaryData, userID int) error {
 	fileID := uuid.New()
-	link, err := s.binaryRepo.Save(data.Data, fileID.String())
+	link, err := s.binaryRepo.Save(reader, fileID.String())
 	if err != nil {
 		return err
 	}

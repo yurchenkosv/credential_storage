@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -14,9 +15,13 @@ func NewLocalBinaryRepository(directory string) *LocalBinaryRepository {
 	return &LocalBinaryRepository{saveDirectory: directory}
 }
 
-func (r LocalBinaryRepository) Save(data []byte, filename string) (string, error) {
+func (r LocalBinaryRepository) Save(data io.Reader, filename string) (string, error) {
 	fileLocation := filepath.FromSlash(fmt.Sprintf("%s/%s", r.saveDirectory, filename))
-	err := os.WriteFile(fileLocation, data, 0600)
+	f, err := os.OpenFile(fileLocation, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return "", err
+	}
+	_, err = io.Copy(f, data)
 	if err != nil {
 		return "", err
 	}

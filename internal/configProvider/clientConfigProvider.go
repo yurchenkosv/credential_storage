@@ -7,11 +7,12 @@ import (
 )
 
 type ClientConfig struct {
-	ServerAddress string `env:"CRED_SERVER_ADDRESS"`
-	Login         string
-	Password      string
-	Name          string
-	RegisterUser  bool
+	ServerAddress         string `env:"CRED_SERVER_ADDRESS"`
+	Login                 string
+	Password              string
+	Name                  string
+	RegisterUser          bool
+	BinaryStorageLocation string `env:"CRED_CLIENT_BINARY_STORAGE_LOCATION"`
 }
 
 type ClientConfigProvider struct {
@@ -43,8 +44,22 @@ func (p *ClientConfigProvider) Parse() error {
 		"",
 		"password to authenticate to server",
 	)
-	flag.BoolVar(&p.cnf.RegisterUser, "r", false, "flag indicated that user need to be registered")
-	flag.StringVar(&p.cnf.Name, "n", "", "name of the user to be registered with")
+	flag.BoolVar(&p.cnf.RegisterUser,
+		"r",
+		false,
+		"flag indicated that user need to be registered",
+	)
+	flag.StringVar(&p.cnf.Name,
+		"n",
+		"",
+		"name of the user to be registered with",
+	)
+	flag.StringVar(&p.cnf.BinaryStorageLocation,
+		"s",
+		".",
+		"directory to save files, default current directory",
+	)
+
 	flag.Parse()
 	err := env.Parse(p.cnf)
 

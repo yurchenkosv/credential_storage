@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"github.com/yurchenkosv/credential_storage/internal/api"
 	"github.com/yurchenkosv/credential_storage/internal/contextKeys"
 	"github.com/yurchenkosv/credential_storage/internal/service"
+	"net/http"
 	"strconv"
 )
 
@@ -24,7 +26,7 @@ func (c *CredentialsGRPCController) SaveCredentialsData(ctx context.Context, dat
 		return nil, err
 	}
 	return &api.ServerResponse{
-		Status:  200,
+		Status:  http.StatusOK,
 		Message: "Successfully saved data",
 	}, nil
 }
@@ -40,7 +42,7 @@ func (c CredentialsGRPCController) SaveBankingData(ctx context.Context, data *ap
 		return nil, err
 	}
 	return &api.ServerResponse{
-		Status:  200,
+		Status:  http.StatusOK,
 		Message: "Successfully saved data",
 	}, nil
 }
@@ -61,12 +63,13 @@ func (c CredentialsGRPCController) SaveTextData(ctx context.Context, data *api.T
 func (c CredentialsGRPCController) SaveBinaryData(ctx context.Context, data *api.BinaryData) (*api.ServerResponse, error) {
 	modelData := data.ToModel()
 	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
-	err := c.svc.SaveBinaryData(ctx, modelData, id)
+	reader := bytes.NewReader(data.Data)
+	err := c.svc.SaveBinaryData(ctx, reader, modelData, id)
 	if err != nil {
 		return nil, err
 	}
 	return &api.ServerResponse{
-		Status:  200,
+		Status:  http.StatusOK,
 		Message: "Successfully saved data",
 	}, nil
 }
