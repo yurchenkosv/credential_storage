@@ -11,6 +11,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/credential_storage/internal/interceptors"
+	"google.golang.org/grpc/credentials"
 	"net"
 	"os"
 	"os/signal"
@@ -37,10 +38,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	tlsCreds, err := credentials.NewServerTLSFromFile(
+		config.GetConfig().CertLocation,
+		config.GetConfig().PrivateKeyLocation,
+	)
+	if err != nil {
+		log.Fatalf("Failed to setup TLS: %v", err)
+	}
 
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)
 	authSvc := service.NewAuthService(repo, tokenAuth)
-	binaryRepo := repository.NewLocalBinaryRepository("/tmp")
+	binaryRepo := repository.NewLocalBinaryRepository(config.GetConfig().BinaryLocalStorageLocation)
 	credentialsSvc, err := service.NewProxyEncryptedCredentialService(repo, binaryRepo, config.GetConfig().EncryptionSecret)
 	if err != nil {
 		log.Fatal(err)
@@ -49,7 +57,7 @@ func main() {
 
 	grpcAuthController := controllers.NewAuthGRPCController(authSvc)
 	credentialsController := controllers.NewCredentialsGRPCController(credentialsSvc)
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.JWTInterceptor))
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.JWTInterceptor), grpc.Creds(tlsCreds))
 
 	api.RegisterAuthServiceServer(grpcServer, grpcAuthController)
 	api.RegisterCredentialServiceServer(grpcServer, credentialsController)
@@ -68,9 +76,4 @@ func main() {
 
 	<-osSignal
 	grpcServer.GracefulStop()
-
-	//router := routers.NewRouter(repo, tokenAuth)
-	//
-	//log.Fatal(http.ListenAndServe(config.GetConfig().Listen, router))
-
 }

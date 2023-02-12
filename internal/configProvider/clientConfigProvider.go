@@ -3,12 +3,15 @@ package configProvider
 import (
 	"flag"
 	"github.com/caarlos0/env/v6"
+	"github.com/pkg/errors"
 )
 
 type ClientConfig struct {
 	ServerAddress string `env:"CRED_SERVER_ADDRESS"`
 	Login         string
 	Password      string
+	Name          string
+	RegisterUser  bool
 }
 
 type ClientConfigProvider struct {
@@ -40,8 +43,16 @@ func (p *ClientConfigProvider) Parse() error {
 		"",
 		"password to authenticate to server",
 	)
+	flag.BoolVar(&p.cnf.RegisterUser, "r", false, "flag indicated that user need to be registered")
+	flag.StringVar(&p.cnf.Name, "n", "", "name of the user to be registered with")
 	flag.Parse()
 	err := env.Parse(p.cnf)
+
+	if p.cnf.RegisterUser {
+		if p.cnf.Name == "" {
+			return errors.New("Name of the user must be specified for registering (-n flag)")
+		}
+	}
 	return err
 }
 
