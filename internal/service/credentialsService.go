@@ -64,6 +64,15 @@ func (s *CredentialsService) GetCredentialsByName(ctx context.Context, credName 
 
 func (s *CredentialsService) GetAllUserCredentials(ctx context.Context, userID int) ([]model.Credentials, error) {
 	data, err := s.repo.GetCredentialsByUserID(ctx, userID)
+	for _, dt := range data {
+		if dt.BinaryData != nil {
+			bindt, binErr := s.binaryRepo.Load(dt.BinaryData.Link)
+			if binErr != nil {
+				return nil, binErr
+			}
+			dt.BinaryData.Data = bindt
+		}
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -1,11 +1,14 @@
 package view
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/rivo/tview"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"github.com/yurchenkosv/credential_storage/internal/service"
+	"os"
 	"strings"
 )
 
@@ -158,10 +161,10 @@ func (t *TUI) drawCredentialsForm() {
 				credData.Metadata = append(credData.Metadata, model.Metadata{Value: item})
 			}
 			err := t.svc.SendCredentials(*credData)
+			t.pages.SwitchToPage("menu")
 			if err != nil {
 				drawModalError(err.Error(), t.pages)
 			}
-			t.pages.SwitchToPage("menu")
 		}).
 		AddButton("Cancel", func() {
 			t.pages.SwitchToPage("menu")
@@ -195,10 +198,10 @@ func (t *TUI) drawBankForm() {
 				bankData.Metadata = append(bankData.Metadata, model.Metadata{Value: item})
 			}
 			err := t.svc.SendBankCard(*bankData)
+			t.pages.SwitchToPage("menu")
 			if err != nil {
 				drawModalError(err.Error(), t.pages)
 			}
-			t.pages.SwitchToPage("menu")
 		}).
 		AddButton("Cancel", func() {
 			t.pages.SwitchToPage("menu")
@@ -220,10 +223,10 @@ func (t *TUI) drawTextForm() {
 				textData.Metadata = append(textData.Metadata, model.Metadata{Value: item})
 			}
 			err := t.svc.SendText(*textData)
+			t.pages.SwitchToPage("menu")
 			if err != nil {
 				drawModalError(err.Error(), t.pages)
 			}
-			t.pages.SwitchToPage("menu")
 		}).
 		AddButton("Cancel", func() {
 			t.pages.SwitchToPage("menu")
@@ -232,27 +235,32 @@ func (t *TUI) drawTextForm() {
 }
 
 func (t *TUI) drawBinaryForm() {
-	var meta string
+	var meta, fileLocation string
 	binData := &model.BinaryData{}
 	t.form.
 		AddInputField("Name", "", 20, nil, func(name string) {
 			binData.Name = name
 		}).
-		AddInputField("File location", "", 20, nil, func(data string) {
-			binData.Data = []byte(data)
+		AddInputField("File location", "", 20, nil, func(dataLocation string) {
+			fileLocation = dataLocation
 		}).
 		AddTextArea("Metadata", "", 20, 5, 400, func(text string) {
 			meta = text
 		}).
 		AddButton("Save", func() {
-			for _, item := range strings.Split(meta, "\n") {
-				binData.Metadata = append(binData.Metadata, model.Metadata{Value: item})
-			}
-			err := t.svc.SendBinary(*binData)
+			data, err := os.ReadFile(fileLocation)
 			if err != nil {
 				drawModalError(err.Error(), t.pages)
 			}
+			binData.Data = data
+			for _, item := range strings.Split(meta, "\n") {
+				binData.Metadata = append(binData.Metadata, model.Metadata{Value: item})
+			}
+			err = t.svc.SendBinary(*binData)
 			t.pages.SwitchToPage("menu")
+			if err != nil {
+				drawModalError(err.Error(), t.pages)
+			}
 		}).
 		AddButton("Cancel", func() {
 			t.pages.SwitchToPage("menu")
@@ -281,7 +289,18 @@ func (t *TUI) drawTextInfo(credList *tview.List, data *model.TextData) {
 func (t *TUI) drawBinInfo(credList *tview.List, data *model.BinaryData) {
 	credList.
 		AddItem("Download data", "", 0, func() {
-			//t.svc.
+			t.pages.SwitchToPage("menu")
+			if data == nil {
+				drawModalError("no data found", t.pages)
+				return
+			}
+			reader := bytes.NewReader(data.Data)
+			err := t.svc.SaveBinary(reader, uuid.New().String())
+			t.pages.SwitchToPage("menu")
+			if err != nil {
+				drawModalError(err.Error(), t.pages)
+				return
+			}
 		})
 }
 

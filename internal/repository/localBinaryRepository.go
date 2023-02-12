@@ -18,6 +18,7 @@ func NewLocalBinaryRepository(directory string) *LocalBinaryRepository {
 func (r LocalBinaryRepository) Save(data io.Reader, filename string) (string, error) {
 	fileLocation := filepath.FromSlash(fmt.Sprintf("%s/%s", r.saveDirectory, filename))
 	f, err := os.OpenFile(fileLocation, os.O_WRONLY|os.O_CREATE, 0600)
+	defer f.Close()
 	if err != nil {
 		return "", err
 	}
@@ -25,7 +26,7 @@ func (r LocalBinaryRepository) Save(data io.Reader, filename string) (string, er
 	if err != nil {
 		return "", err
 	}
-	return fileLocation, nil
+	return filename, nil
 }
 
 func (r LocalBinaryRepository) Load(link string) ([]byte, error) {

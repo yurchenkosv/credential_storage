@@ -71,13 +71,13 @@ func (s *CredentialServiceEncryptedProxy) SaveBinaryData(ctx context.Context,
 	data *model.BinaryData,
 	userID int) error {
 
-	var byteData []byte
-	_, err := reader.Read(byteData)
+	byteData := bytes.NewBuffer(nil)
+	_, err := byteData.ReadFrom(reader)
 	if err != nil {
 		return err
 	}
 
-	encryptedReader := bytes.NewReader(encryptData(s.cypherBlock, byteData))
+	encryptedReader := bytes.NewReader(encryptData(s.cypherBlock, byteData.Bytes()))
 	data.Name = string(encryptData(s.cypherBlock, []byte(data.Name)))
 	data.Metadata = encryptMetadata(data.Metadata, s.cypherBlock)
 	return s.svc.SaveBinaryData(ctx, encryptedReader, data, userID)
@@ -111,7 +111,6 @@ func (s *CredentialServiceEncryptedProxy) GetAllUserCredentials(ctx context.Cont
 		}
 		if cred.BinaryData != nil {
 			cred.BinaryData.Data = decryptData(cred.BinaryData.Data, s.cypherBlock)
-			cred.BinaryData.Link = string(decryptData([]byte(cred.BinaryData.Link), s.cypherBlock))
 		}
 		cred.Name = string(decryptData([]byte(cred.Name), s.cypherBlock))
 		cred.Metadata = decryptMetadata(cred.Metadata, s.cypherBlock)
