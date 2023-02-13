@@ -27,6 +27,7 @@ type CredentialServiceClient interface {
 	SaveTextData(ctx context.Context, in *TextData, opts ...grpc.CallOption) (*ServerResponse, error)
 	SaveBinaryData(ctx context.Context, in *BinaryData, opts ...grpc.CallOption) (*ServerResponse, error)
 	GetData(ctx context.Context, in *AllDataRequest, opts ...grpc.CallOption) (*SecretDataList, error)
+	DeleteData(ctx context.Context, in *SecretsData, opts ...grpc.CallOption) (*ServerResponse, error)
 }
 
 type credentialServiceClient struct {
@@ -82,6 +83,15 @@ func (c *credentialServiceClient) GetData(ctx context.Context, in *AllDataReques
 	return out, nil
 }
 
+func (c *credentialServiceClient) DeleteData(ctx context.Context, in *SecretsData, opts ...grpc.CallOption) (*ServerResponse, error) {
+	out := new(ServerResponse)
+	err := c.cc.Invoke(ctx, "/api.CredentialService/DeleteData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CredentialServiceServer is the server API for CredentialService service.
 // All implementations should embed UnimplementedCredentialServiceServer
 // for forward compatibility
@@ -91,6 +101,7 @@ type CredentialServiceServer interface {
 	SaveTextData(context.Context, *TextData) (*ServerResponse, error)
 	SaveBinaryData(context.Context, *BinaryData) (*ServerResponse, error)
 	GetData(context.Context, *AllDataRequest) (*SecretDataList, error)
+	DeleteData(context.Context, *SecretsData) (*ServerResponse, error)
 }
 
 // UnimplementedCredentialServiceServer should be embedded to have forward compatible implementations.
@@ -111,6 +122,9 @@ func (UnimplementedCredentialServiceServer) SaveBinaryData(context.Context, *Bin
 }
 func (UnimplementedCredentialServiceServer) GetData(context.Context, *AllDataRequest) (*SecretDataList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetData not implemented")
+}
+func (UnimplementedCredentialServiceServer) DeleteData(context.Context, *SecretsData) (*ServerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteData not implemented")
 }
 
 // UnsafeCredentialServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -214,6 +228,24 @@ func _CredentialService_GetData_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CredentialService_DeleteData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretsData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CredentialServiceServer).DeleteData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.CredentialService/DeleteData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CredentialServiceServer).DeleteData(ctx, req.(*SecretsData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CredentialService_ServiceDesc is the grpc.ServiceDesc for CredentialService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -240,6 +272,10 @@ var CredentialService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetData",
 			Handler:    _CredentialService_GetData_Handler,
+		},
+		{
+			MethodName: "DeleteData",
+			Handler:    _CredentialService_DeleteData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

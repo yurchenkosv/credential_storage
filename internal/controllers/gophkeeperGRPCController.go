@@ -5,6 +5,7 @@ import (
 	"context"
 	"github.com/yurchenkosv/credential_storage/internal/api"
 	"github.com/yurchenkosv/credential_storage/internal/contextKeys"
+	"github.com/yurchenkosv/credential_storage/internal/model"
 	"github.com/yurchenkosv/credential_storage/internal/service"
 	"net/http"
 	"strconv"
@@ -31,7 +32,7 @@ func (c *CredentialsGRPCController) SaveCredentialsData(ctx context.Context, dat
 	}, nil
 }
 
-func (c CredentialsGRPCController) SaveBankingData(ctx context.Context, data *api.BankingCardData) (*api.ServerResponse, error) {
+func (c *CredentialsGRPCController) SaveBankingData(ctx context.Context, data *api.BankingCardData) (*api.ServerResponse, error) {
 	modelData, err := data.ToModel()
 	if err != nil {
 		return nil, err
@@ -47,7 +48,7 @@ func (c CredentialsGRPCController) SaveBankingData(ctx context.Context, data *ap
 	}, nil
 }
 
-func (c CredentialsGRPCController) SaveTextData(ctx context.Context, data *api.TextData) (*api.ServerResponse, error) {
+func (c *CredentialsGRPCController) SaveTextData(ctx context.Context, data *api.TextData) (*api.ServerResponse, error) {
 	modelData := data.ToModel()
 	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
 	err := c.svc.SaveTextData(ctx, modelData, id)
@@ -60,7 +61,7 @@ func (c CredentialsGRPCController) SaveTextData(ctx context.Context, data *api.T
 	}, nil
 }
 
-func (c CredentialsGRPCController) SaveBinaryData(ctx context.Context, data *api.BinaryData) (*api.ServerResponse, error) {
+func (c *CredentialsGRPCController) SaveBinaryData(ctx context.Context, data *api.BinaryData) (*api.ServerResponse, error) {
 	modelData := data.ToModel()
 	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
 	reader := bytes.NewReader(data.Data)
@@ -73,7 +74,8 @@ func (c CredentialsGRPCController) SaveBinaryData(ctx context.Context, data *api
 		Message: "Successfully saved data",
 	}, nil
 }
-func (c CredentialsGRPCController) GetData(ctx context.Context, data *api.AllDataRequest) (*api.SecretDataList, error) {
+
+func (c *CredentialsGRPCController) GetData(ctx context.Context, data *api.AllDataRequest) (*api.SecretDataList, error) {
 	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
 	creds, err := c.svc.GetAllUserCredentials(ctx, id)
 	secretDataList := &api.SecretDataList{}
@@ -81,7 +83,7 @@ func (c CredentialsGRPCController) GetData(ctx context.Context, data *api.AllDat
 		return nil, err
 	}
 	for _, secret := range creds {
-		msg := api.SecretsDataResponse{Name: secret.Name, Id: int32(secret.ID)}
+		msg := api.SecretsData{Name: secret.Name, Id: int32(secret.ID)}
 		if secret.BankingCardData != nil {
 			num, _ := strconv.ParseInt(secret.BankingCardData.Number, 10, 64)
 			cvv, _ := strconv.ParseInt(secret.BankingCardData.CVV, 10, 64)
@@ -125,4 +127,37 @@ func (c CredentialsGRPCController) GetData(ctx context.Context, data *api.AllDat
 		secretDataList.Secrets = append(secretDataList.Secrets, &msg)
 	}
 	return secretDataList, nil
+}
+
+func (c *CredentialsGRPCController) DeleteData(ctx context.Context, data *api.SecretsData) (*api.ServerResponse, error) {
+	id := ctx.Value(contextKeys.UserIDContexKey("user_id")).(int)
+	credData := model.Credentials{}
+	if data.BinaryData != nil {
+		credData.BinaryData = &model.BinaryData{ID: int(data.BinaryData.Id)}
+	}
+	if data.CredentialsData != nil {
+
+		credData.CredentialsData = &model.CredentialsData{ID: int(data.CredentialsData.Id)}
+	}
+	if data.BankingData != nil {
+
+		credData.BankingCardData = &model.BankingCardData{ID: int(data.BankingData.Id)}
+	}
+	if data.TextData != nil {
+		credData.TextData = &model.TextData{ID: int(data.TextData.Id)}
+
+	}
+
+	for _, meta := range data.Metadata {
+		credData.Metadata = append(credData.Metadata, model.Metadata{Value: meta})
+	}
+	err := c.svc.DeleteCredential(ctx, credData, id)
+
+	if err != nil {
+		return nil, err
+	}
+	return &api.ServerResponse{
+		Status:  http.StatusOK,
+		Message: "Successfully saved data",
+	}, nil
 }

@@ -66,15 +66,19 @@ func (s *CredentialsService) GetAllUserCredentials(ctx context.Context, userID i
 	data, err := s.repo.GetCredentialsByUserID(ctx, userID)
 	for _, dt := range data {
 		if dt.BinaryData != nil {
-			bindt, binErr := s.binaryRepo.Load(dt.BinaryData.Link)
+			binDt, binErr := s.binaryRepo.Load(dt.BinaryData.Link)
 			if binErr != nil {
 				return nil, binErr
 			}
-			dt.BinaryData.Data = bindt
+			dt.BinaryData.Data = binDt
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
+}
+
+func (s *CredentialsService) DeleteCredential(ctx context.Context, data model.Credentials, userID int) error {
+	return s.repo.DeleteData(ctx, data, userID)
 }

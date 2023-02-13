@@ -8,7 +8,9 @@ service CredentialService{
   rpc SaveTextData(TextData) returns (ServerResponse){}
   rpc SaveBinaryData(BinaryData) returns (ServerResponse){}
 
-  rpc GetData(AllDataRequest) returns (SecretDataList) {}
+  rpc GetData(AllDataRequest) returns (SecretDataList){}
+
+  rpc DeleteData(SecretsData) returns (ServerResponse){}
 }
 
 message CredentialsData {
@@ -50,7 +52,7 @@ message ServerResponse {
 
 message AllDataRequest {}
 
-message SecretsDataResponse {
+message SecretsData {
   string name = 1;
   CredentialsData credentialsData = 2;
   BankingCardData bankingData = 3;
@@ -61,7 +63,7 @@ message SecretsDataResponse {
 }
 
 message SecretDataList{
-  repeated SecretsDataResponse secrets = 1;
+  repeated SecretsData secrets = 1;
 }
 
 enum ResponseStatus {

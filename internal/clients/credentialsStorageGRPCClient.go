@@ -26,7 +26,7 @@ func NewCredentialsStorageGRPCClient(connect *grpc.ClientConn, opts ...grpc.Call
 	}
 }
 
-func (c CredentialsStorageGRPCClient) AuthenticateUser(ctx context.Context, login string, password string) (string, error) {
+func (c *CredentialsStorageGRPCClient) AuthenticateUser(ctx context.Context, login string, password string) (string, error) {
 	var header metadata.MD
 	userAuth := &api.UserAuthentication{
 		Login:    login,
@@ -184,6 +184,30 @@ func (c *CredentialsStorageGRPCClient) SendText(ctx context.Context, data model.
 		Metadata: meta,
 	}
 	_, err := c.credServiceClient.SaveTextData(ctx, apiData, c.opts...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CredentialsStorageGRPCClient) DeleteData(ctx context.Context, data model.Credentials) error {
+	credData := api.SecretsData{}
+	if data.BankingCardData != nil {
+		credData.BankingData = &api.BankingCardData{Id: int32(data.ID)}
+	}
+	if data.BinaryData != nil {
+		credData.BinaryData = &api.BinaryData{Id: int32(data.BinaryData.ID)}
+	}
+	if data.TextData != nil {
+		credData.TextData = &api.TextData{Id: int32(data.BinaryData.ID)}
+	}
+	if data.CredentialsData != nil {
+		credData.CredentialsData = &api.CredentialsData{Id: int32(data.CredentialsData.ID)}
+	}
+	for _, meta := range data.Metadata {
+		credData.Metadata = append(credData.Metadata, meta.Value)
+	}
+	_, err := c.credServiceClient.DeleteData(ctx, &credData, c.opts...)
 	if err != nil {
 		return err
 	}

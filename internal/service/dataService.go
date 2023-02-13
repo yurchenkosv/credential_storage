@@ -13,4 +13,5 @@ type DataService interface {
 	SaveBinaryData(ctx context.Context, reader io.Reader, data *model.BinaryData, userID int) error
 	GetCredentialsByName(ctx context.Context, credName string, userID int) ([]model.CredentialsData, error)
 	GetAllUserCredentials(ctx context.Context, userID int) ([]model.Credentials, error)
+	DeleteCredential(ctx context.Context, data model.Credentials, userID int) error
 }

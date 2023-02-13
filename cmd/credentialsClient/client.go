@@ -12,6 +12,7 @@ import (
 	"github.com/yurchenkosv/credential_storage/internal/view"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"os"
 )
 
 func main() {
@@ -38,11 +39,12 @@ func main() {
 			Password: cfg.GetConfig().Password,
 			Name:     cfg.GetConfig().Name,
 		}
-		jwt, regErr := authSvc.Register(ctx, user)
+		_, regErr := authSvc.Register(ctx, user)
 		if regErr != nil {
 			log.Fatal("cannot register on server: ", regErr)
 		}
-		ctx = addJWTToContext(jwt)
+		log.Info("successfully registered user")
+		os.Exit(0)
 	} else {
 		jwt, authErr := authSvc.Authenticate(ctx, cfg.GetConfig().Login, cfg.GetConfig().Password)
 		if authErr != nil {

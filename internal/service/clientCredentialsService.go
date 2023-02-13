@@ -29,6 +29,10 @@ func (s *ClientCredentialsService) GetData() ([]model.Credentials, error) {
 	return s.client.GetData(s.ctx)
 }
 
+func (s *ClientCredentialsService) DeleteData(data model.Credentials) error {
+	return s.client.DeleteData(s.ctx, data)
+}
+
 func (s *ClientCredentialsService) SaveBinary(reader io.Reader, filename string) error {
 	_, err := s.binaryRepository.Save(reader, filename)
 	return err

@@ -98,7 +98,7 @@ func (t *TUI) drawDataList(credentials []model.Credentials) {
 		if cred.CredentialsData != nil {
 			cd := cred.CredentialsData
 			list := tview.NewList()
-			drawCredInfo(list, cd)
+			t.drawCredInfo(list, cd)
 			t.drawMetadataInfo(list, cred.Metadata)
 			t.items.AddItem(cred.Name, "", 0, func() {
 				t.pages.AddPage(cred.Name, list, true, false)
@@ -267,7 +267,7 @@ func (t *TUI) drawBinaryForm() {
 		})
 }
 
-func drawCredInfo(credList *tview.List, data *model.CredentialsData) {
+func (t *TUI) drawCredInfo(credList *tview.List, data *model.CredentialsData) {
 	credList.
 		AddItem(fmt.Sprint("Login: ", data.Login), "", 0, nil).
 		AddItem(fmt.Sprint("Password: ", data.Password), "", 0, nil)

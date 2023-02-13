@@ -43,7 +43,7 @@ func main() {
 		config.GetConfig().PrivateKeyLocation,
 	)
 	if err != nil {
-		log.Fatalf("Failed to setup TLS: %v", err)
+		log.Fatal("Failed to setup TLS: ", err)
 	}
 
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)

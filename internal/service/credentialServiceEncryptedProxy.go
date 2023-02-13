@@ -119,6 +119,10 @@ func (s *CredentialServiceEncryptedProxy) GetAllUserCredentials(ctx context.Cont
 	return data, nil
 }
 
+func (s *CredentialServiceEncryptedProxy) DeleteCredential(ctx context.Context, data model.Credentials, userID int) error {
+	return s.svc.DeleteCredential(ctx, data, userID)
+}
+
 func initCypher(key string) (cipher.Block, error) {
 	initKey := sha256.Sum256([]byte(key))
 	return aes.NewCipher(initKey[:])

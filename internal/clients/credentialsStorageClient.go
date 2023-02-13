@@ -7,6 +7,7 @@ import (
 
 type CredentialsStorageClient interface {
 	GetData(ctx context.Context) ([]model.Credentials, error)
+	DeleteData(ctx context.Context, data model.Credentials) error
 	SendCredentials(ctx context.Context, credentials model.CredentialsData) error
 	SendBankCard(ctx context.Context, card model.BankingCardData) error
 	SendBinary(ctx context.Context, binary model.BinaryData) error

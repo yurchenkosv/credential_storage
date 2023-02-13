@@ -426,17 +426,42 @@ func (r *PostgresRepository) UpdateBinaryData(ctx context.Context, data model.Bi
 
 func (r *PostgresRepository) DeleteData(ctx context.Context, data model.Credentials, userID int) error {
 	err := r.Transactional(ctx, func() error {
+		var dataID, modelID int
+		if data.BankingCardData != nil {
+			modelID = data.BankingCardData.ID
+		}
+		if data.CredentialsData != nil {
+			modelID = data.CredentialsData.ID
+		}
+		if data.TextData != nil {
+			modelID = data.TextData.ID
+		}
+		if data.BinaryData != nil {
+			modelID = data.BinaryData.ID
+		}
+
 		query := `
+			DELETE FROM data
+			WHERE binary_data_id=$1 
+			   OR banking_cards_data_id=$1
+			   OR credentials_data_id=$1
+			   OR text_data_id=$1;
+		`
+		_, err := r.Conn.ExecContext(ctx, query, modelID)
+		if err != nil {
+			return err
+		}
+		query = `
 			DELETE FROM data WHERE id = $1 AND user_id=$2;
 		`
-		_, err := r.Conn.ExecContext(ctx, query, data.ID, userID)
+		_, err = r.Conn.ExecContext(ctx, query, dataID, userID)
 		if err != nil {
 			return err
 		}
 		query = `
 			DELETE FROM metadata WHERE data_id=$1;
 		`
-		_, err = r.Conn.ExecContext(ctx, query, data.ID)
+		_, err = r.Conn.ExecContext(ctx, query, dataID)
 		if err != nil {
 			return err
 		}
