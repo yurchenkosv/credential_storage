@@ -6,6 +6,7 @@ package mock_service
 
 import (
 	context "context"
+	io "io"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -33,6 +34,20 @@ func NewMockDataService(ctrl *gomock.Controller) *MockDataService {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockDataService) EXPECT() *MockDataServiceMockRecorder {
 	return m.recorder
+}
+
+// DeleteCredential mocks base method.
+func (m *MockDataService) DeleteCredential(ctx context.Context, data model.Credentials, userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCredential", ctx, data, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCredential indicates an expected call of DeleteCredential.
+func (mr *MockDataServiceMockRecorder) DeleteCredential(ctx, data, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCredential", reflect.TypeOf((*MockDataService)(nil).DeleteCredential), ctx, data, userID)
 }
 
 // GetAllUserCredentials mocks base method.
@@ -80,17 +95,17 @@ func (mr *MockDataServiceMockRecorder) SaveBankingCardData(ctx, data, userID int
 }
 
 // SaveBinaryData mocks base method.
-func (m *MockDataService) SaveBinaryData(ctx context.Context, data *model.BinaryData, userID int) error {
+func (m *MockDataService) SaveBinaryData(ctx context.Context, reader io.Reader, data *model.BinaryData, userID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveBinaryData", ctx, data, userID)
+	ret := m.ctrl.Call(m, "SaveBinaryData", ctx, reader, data, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveBinaryData indicates an expected call of SaveBinaryData.
-func (mr *MockDataServiceMockRecorder) SaveBinaryData(ctx, data, userID interface{}) *gomock.Call {
+func (mr *MockDataServiceMockRecorder) SaveBinaryData(ctx, reader, data, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBinaryData", reflect.TypeOf((*MockDataService)(nil).SaveBinaryData), ctx, data, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBinaryData", reflect.TypeOf((*MockDataService)(nil).SaveBinaryData), ctx, reader, data, userID)
 }
 
 // SaveCredentialsData mocks base method.

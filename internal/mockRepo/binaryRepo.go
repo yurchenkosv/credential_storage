@@ -5,6 +5,7 @@
 package mock_repository
 
 import (
+	io "io"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -49,7 +50,7 @@ func (mr *MockBinaryRepositoryMockRecorder) Load(link interface{}) *gomock.Call 
 }
 
 // Save mocks base method.
-func (m *MockBinaryRepository) Save(data []byte, filename string) (string, error) {
+func (m *MockBinaryRepository) Save(data io.Reader, filename string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Save", data, filename)
 	ret0, _ := ret[0].(string)

@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"github.com/golang/mock/gomock"
 	"github.com/yurchenkosv/credential_storage/internal/api"
 	"github.com/yurchenkosv/credential_storage/internal/contextKeys"
 	mock_service "github.com/yurchenkosv/credential_storage/internal/mockService"
 	"github.com/yurchenkosv/credential_storage/internal/model"
+	"io"
 	"reflect"
 	"testing"
 )
@@ -67,7 +69,7 @@ func TestCredentialsGRPCController_GetData(t *testing.T) {
 				},
 			},
 			want: &api.SecretDataList{
-				Secrets: []*api.SecretsDataResponse{
+				Secrets: []*api.SecretsData{
 					{
 						Name: "testCredentials",
 						CredentialsData: &api.CredentialsData{
@@ -180,11 +182,12 @@ func TestCredentialsGRPCController_SaveBankingData(t *testing.T) {
 }
 
 func TestCredentialsGRPCController_SaveBinaryData(t *testing.T) {
-	type mockBehavior func(ctx context.Context, s *mock_service.MockDataService, data *model.BinaryData)
+	type mockBehavior func(ctx context.Context, s *mock_service.MockDataService, reader io.Reader, data *model.BinaryData)
 	type args struct {
 		ctx        context.Context
 		data       *api.BinaryData
 		binaryData *model.BinaryData
+		reader     io.Reader
 	}
 	tests := []struct {
 		name         string
@@ -195,8 +198,8 @@ func TestCredentialsGRPCController_SaveBinaryData(t *testing.T) {
 	}{
 		{
 			name: "should save binary",
-			mockBehavior: func(ctx context.Context, s *mock_service.MockDataService, data *model.BinaryData) {
-				s.EXPECT().SaveBinaryData(ctx, data, 1)
+			mockBehavior: func(ctx context.Context, s *mock_service.MockDataService, reader io.Reader, data *model.BinaryData) {
+				s.EXPECT().SaveBinaryData(ctx, reader, data, 1).Return(nil)
 			},
 			args: args{
 				ctx: context.WithValue(context.Background(), contextKeys.UserIDContexKey("user_id"), 1),
@@ -208,6 +211,7 @@ func TestCredentialsGRPCController_SaveBinaryData(t *testing.T) {
 					Data: []byte("test"),
 					Name: "test",
 				},
+				reader: bytes.NewReader([]byte("test")),
 			},
 			want: &api.ServerResponse{
 				Status:  200,
@@ -221,7 +225,7 @@ func TestCredentialsGRPCController_SaveBinaryData(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			svc := mock_service.NewMockDataService(ctrl)
-			tt.mockBehavior(tt.args.ctx, svc, tt.args.binaryData)
+			tt.mockBehavior(tt.args.ctx, svc, tt.args.reader, tt.args.binaryData)
 			c := NewCredentialsGRPCController(svc)
 			got, err := c.SaveBinaryData(tt.args.ctx, tt.args.data)
 			if (err != nil) != tt.wantErr {

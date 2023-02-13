@@ -1,9 +1,11 @@
 package repository
 
 import (
+	"bytes"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -33,7 +35,8 @@ func TestLocalBinaryRepository_Load(t *testing.T) {
 				saveDirectory: ".",
 			},
 			before: func(r BinaryRepository, filename string) {
-				_, err := r.Save([]byte("test"), filename)
+				reader := bytes.NewReader([]byte("test"))
+				_, err := r.Save(reader, filename)
 				if err != nil {
 					log.Error(err)
 				}
@@ -73,7 +76,7 @@ func TestLocalBinaryRepository_Save(t *testing.T) {
 		saveDirectory string
 	}
 	type args struct {
-		data     []byte
+		data     io.Reader
 		filename string
 	}
 	tests := []struct {
@@ -90,10 +93,10 @@ func TestLocalBinaryRepository_Save(t *testing.T) {
 				saveDirectory: ".",
 			},
 			args: args{
-				data:     []byte("test"),
+				data:     bytes.NewReader([]byte("test")),
 				filename: "test_file",
 			},
-			want: filepath.FromSlash("./test_file"),
+			want: filepath.FromSlash("test_file"),
 			after: func(filepath string) {
 				err := os.Remove(filepath)
 				if err != nil {

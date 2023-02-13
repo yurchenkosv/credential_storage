@@ -50,6 +50,20 @@ func (mr *MockCredentialsStorageClientMockRecorder) AuthenticateUser(ctx, login,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateUser", reflect.TypeOf((*MockCredentialsStorageClient)(nil).AuthenticateUser), ctx, login, password)
 }
 
+// DeleteData mocks base method.
+func (m *MockCredentialsStorageClient) DeleteData(ctx context.Context, data model.Credentials) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteData", ctx, data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteData indicates an expected call of DeleteData.
+func (mr *MockCredentialsStorageClientMockRecorder) DeleteData(ctx, data interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteData", reflect.TypeOf((*MockCredentialsStorageClient)(nil).DeleteData), ctx, data)
+}
+
 // GetData mocks base method.
 func (m *MockCredentialsStorageClient) GetData(ctx context.Context) ([]model.Credentials, error) {
 	m.ctrl.T.Helper()

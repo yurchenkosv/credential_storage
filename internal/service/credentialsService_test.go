@@ -5,6 +5,7 @@ import (
 	"github.com/golang/mock/gomock"
 	mock_repository "github.com/yurchenkosv/credential_storage/internal/mockRepo"
 	"github.com/yurchenkosv/credential_storage/internal/model"
+	"io"
 	"reflect"
 	"testing"
 )
@@ -204,11 +205,13 @@ func TestCredentialsService_SaveBinaryData(t *testing.T) {
 		data *model.BinaryData, link string)
 	type mockBinaryBehavior func(ctx context.Context,
 		s *mock_repository.MockBinaryRepository,
+		reader io.Reader,
 		data []byte,
 		filename string)
 	type args struct {
 		ctx    context.Context
 		data   *model.BinaryData
+		reader io.Reader
 		userID int
 	}
 	tests := []struct {
@@ -250,12 +253,12 @@ func TestCredentialsService_SaveBinaryData(t *testing.T) {
 			repo := mock_repository.NewMockRepository(ctrl)
 			binaryRepo := mock_repository.NewMockBinaryRepository(ctrl)
 			tt.mockPostgresBehavior(tt.args.ctx, repo, tt.args.userID, tt.args.data, "/tmp/test_file")
-			tt.mockBinaryBehavior(tt.args.ctx, binaryRepo, tt.args.data.Data, "test_file")
+			tt.mockBinaryBehavior(tt.args.ctx, binaryRepo, tt.args.reader, tt.args.data.Data, "test_file")
 			s := &CredentialsService{
 				repo:       repo,
 				binaryRepo: binaryRepo,
 			}
-			if err := s.SaveBinaryData(tt.args.ctx, tt.args.data, tt.args.userID); (err != nil) != tt.wantErr {
+			if err := s.SaveBinaryData(tt.args.ctx, tt.args.reader, tt.args.data, tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("SaveBinaryData() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
