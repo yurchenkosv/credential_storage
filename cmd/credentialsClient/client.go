@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/credential_storage/internal/clients"
 	"github.com/yurchenkosv/credential_storage/internal/configProvider"
@@ -11,7 +10,6 @@ import (
 	"github.com/yurchenkosv/credential_storage/internal/service"
 	"github.com/yurchenkosv/credential_storage/internal/view"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"os"
 )
 
@@ -21,11 +19,13 @@ func main() {
 	if err != nil {
 		log.Fatal("config processing error: ", err)
 	}
-	dialOption := grpc.WithTransportCredentials(credentials.NewTLS(
-		&tls.Config{
-			InsecureSkipVerify: true,
-		}),
-	)
+
+	tlsCredentials, err := loadTLSCredentials(cfg.GetConfig().CACertLocation)
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+
+	dialOption := grpc.WithTransportCredentials(tlsCredentials)
 	conn, err := grpc.Dial(cfg.GetConfig().ServerAddress, dialOption)
 	if err != nil {
 		log.Fatal("cannot create connection to server ", err)

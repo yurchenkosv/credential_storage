@@ -9,6 +9,7 @@ import (
 	mock_service "github.com/yurchenkosv/credential_storage/internal/mockService"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"io"
+	"net/http"
 	"reflect"
 	"testing"
 )
@@ -348,6 +349,58 @@ func TestCredentialsGRPCController_SaveTextData(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("SaveTextData() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCredentialsGRPCController_DeleteData(t *testing.T) {
+	type mockBehavior func(ctx context.Context, s *mock_service.MockDataService, data model.Credentials)
+	type args struct {
+		ctx      context.Context
+		data     *api.SecretsData
+		mockData model.Credentials
+	}
+	tests := []struct {
+		name         string
+		mockBehavior mockBehavior
+		args         args
+		want         *api.ServerResponse
+		wantErr      bool
+	}{
+		{
+			name: "should delete data",
+			mockBehavior: func(ctx context.Context, s *mock_service.MockDataService, data model.Credentials) {
+				userID := 1
+				s.EXPECT().DeleteCredential(ctx, data, userID).Return(nil)
+			},
+			args: args{
+				ctx:      context.WithValue(context.Background(), contextKeys.UserIDContexKey("user_id"), 1),
+				data:     &api.SecretsData{CredentialsData: &api.CredentialsData{Id: 1}},
+				mockData: model.Credentials{CredentialsData: &model.CredentialsData{ID: 1}},
+			},
+			want: &api.ServerResponse{
+				Status:  http.StatusOK,
+				Message: "Successfully saved data",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			svc := mock_service.NewMockDataService(ctrl)
+			tt.mockBehavior(tt.args.ctx, svc, tt.args.mockData)
+			c := &CredentialsGRPCController{
+				svc: svc}
+			got, err := c.DeleteData(tt.args.ctx, tt.args.data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DeleteData() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

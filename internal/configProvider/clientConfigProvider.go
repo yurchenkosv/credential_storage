@@ -13,6 +13,7 @@ type ClientConfig struct {
 	Name                  string
 	RegisterUser          bool
 	BinaryStorageLocation string `env:"CRED_CLIENT_BINARY_STORAGE_LOCATION"`
+	CACertLocation        string `env:"CRED_CLIENT_CA_CERT"`
 }
 
 type ClientConfigProvider struct {
@@ -59,6 +60,10 @@ func (p *ClientConfigProvider) Parse() error {
 		".",
 		"directory to save files, default current directory",
 	)
+	flag.StringVar(&p.cnf.CACertLocation,
+		"c",
+		"ca-cert.pem",
+		"-c <PATH>: location of ca certificate")
 
 	flag.Parse()
 	err := env.Parse(p.cnf)

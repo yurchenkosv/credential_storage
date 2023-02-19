@@ -136,16 +136,13 @@ func (c *CredentialsGRPCController) DeleteData(ctx context.Context, data *api.Se
 		credData.BinaryData = &model.BinaryData{ID: int(data.BinaryData.Id)}
 	}
 	if data.CredentialsData != nil {
-
 		credData.CredentialsData = &model.CredentialsData{ID: int(data.CredentialsData.Id)}
 	}
 	if data.BankingData != nil {
-
 		credData.BankingCardData = &model.BankingCardData{ID: int(data.BankingData.Id)}
 	}
 	if data.TextData != nil {
 		credData.TextData = &model.TextData{ID: int(data.TextData.Id)}
-
 	}
 
 	for _, meta := range data.Metadata {

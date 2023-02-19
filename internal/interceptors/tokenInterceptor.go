@@ -2,6 +2,7 @@ package interceptors
 
 import (
 	"context"
+	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/credential_storage/internal/contextKeys"
 	"github.com/yurchenkosv/credential_storage/internal/service"
 	"google.golang.org/grpc"
@@ -18,6 +19,7 @@ func NewAuthInterceptor(svc service.Auth) *AuthInterceptor {
 func (i *AuthInterceptor) JWTInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	if info.FullMethod == "/api.AuthService/AuthenticateUser" ||
 		info.FullMethod == "/api.AuthService/RegisterUser" {
+		log.Debug("request was", req)
 		return handler(ctx, req)
 	}
 	token, err := i.authSvc.GetJWTTokenFromGRPCContext(ctx)

@@ -11,7 +11,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/credential_storage/internal/interceptors"
-	"google.golang.org/grpc/credentials"
 	"net"
 	"os"
 	"os/signal"
@@ -23,6 +22,7 @@ var (
 )
 
 func main() {
+	log.SetLevel(log.WarnLevel)
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
@@ -38,12 +38,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	tlsCreds, err := credentials.NewServerTLSFromFile(
-		config.GetConfig().CertLocation,
-		config.GetConfig().PrivateKeyLocation,
-	)
+
+	tlsCredentials, err := loadTLSCredentials(config.GetConfig().PrivateKeyLocation, config.GetConfig().CertLocation)
 	if err != nil {
-		log.Fatal("Failed to setup TLS: ", err)
+		log.Fatal("cannot load TLS credentials: ", err)
 	}
 
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)
@@ -57,7 +55,7 @@ func main() {
 
 	grpcAuthController := controllers.NewAuthGRPCController(authSvc)
 	credentialsController := controllers.NewCredentialsGRPCController(credentialsSvc)
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.JWTInterceptor), grpc.Creds(tlsCreds))
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.JWTInterceptor), grpc.Creds(tlsCredentials))
 
 	api.RegisterAuthServiceServer(grpcServer, grpcAuthController)
 	api.RegisterCredentialServiceServer(grpcServer, credentialsController)
@@ -68,6 +66,7 @@ func main() {
 	}
 
 	go func(listener net.Listener) {
+		log.Info("credentials server started")
 		err = grpcServer.Serve(listener)
 		if err != nil {
 			log.Error(err)
