@@ -65,3 +65,5 @@ CRED_CLIENT_CA_CERT - путь на клиенте до CA сертификат�
 export CRED_CLIENT_CA_CERT=hack/ca-cert.pem
 export CRED_SERVER_ADDRESS=localhost:8090
 ```
+
+Тестирование юнит + интеграционное выполняется командой `make test`
