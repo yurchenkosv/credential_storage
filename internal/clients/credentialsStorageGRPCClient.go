@@ -2,7 +2,6 @@ package clients
 
 import (
 	"context"
-	"errors"
 	"github.com/yurchenkosv/credential_storage/internal/api"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"google.golang.org/grpc"
@@ -51,12 +50,8 @@ func (c *CredentialsStorageGRPCClient) RegisterUser(ctx context.Context, user mo
 	if err != nil {
 		return "", err
 	}
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return "", errors.New("cannot get metadata from context")
-	}
-	jwtToken := md.Get("jwt")[0]
-	return jwtToken, nil
+
+	return "", nil
 }
 
 func (c *CredentialsStorageGRPCClient) GetData(ctx context.Context) ([]model.Credentials, error) {

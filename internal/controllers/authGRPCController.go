@@ -41,11 +41,7 @@ func (c *AuthGRPCController) RegisterUser(ctx context.Context,
 		return nil, err
 	}
 	header := metadata.Pairs("jwt", token)
-	err = grpc.SendHeader(ctx, header)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
+	grpc.SendHeader(ctx, header)
 	response := api.ServerAuthResponse{
 		Message: "Successfully registered",
 		Code:    http.StatusOK,
@@ -71,11 +67,7 @@ func (c *AuthGRPCController) AuthenticateUser(ctx context.Context,
 		return nil, err
 	}
 	header := metadata.Pairs("jwt", token)
-	err = grpc.SendHeader(ctx, header)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
+	grpc.SendHeader(ctx, header)
 	return &api.ServerAuthResponse{
 		Message: "Successfully authorized",
 		Code:    http.StatusOK,

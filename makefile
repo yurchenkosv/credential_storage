@@ -15,3 +15,6 @@ run_server: certs build_local_server
 	docker run -d -e POSTGRES_DB=credentials -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:14
 	sleep 5
 	hack/run_server.sh
+
+test:
+	go test ./...
