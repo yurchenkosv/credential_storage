@@ -1,14 +1,17 @@
 package clients
 
-import "github.com/yurchenkosv/credential_storage/internal/model"
+import (
+	"context"
+	"github.com/yurchenkosv/credential_storage/internal/model"
+)
 
 type CredentialsStorageClient interface {
-	GetCredentials() (model.CredentialsData, error)
-	GetBankCard() (model.BankingCardData, error)
-	GetBinary() (model.BinaryData, error)
-	GetText() (model.TextData, error)
-	SendCredentials(credentials model.CredentialsData) error
-	SendBankCard(card model.BankingCardData) error
-	SendBinary(binary model.BinaryData) error
-	SendText(text model.TextData) error
+	GetData(ctx context.Context) ([]model.Credentials, error)
+	DeleteData(ctx context.Context, data model.Credentials) error
+	SendCredentials(ctx context.Context, credentials model.CredentialsData) error
+	SendBankCard(ctx context.Context, card model.BankingCardData) error
+	SendBinary(ctx context.Context, binary model.BinaryData) error
+	SendText(ctx context.Context, text model.TextData) error
+	AuthenticateUser(ctx context.Context, login string, password string) (string, error)
+	RegisterUser(ctx context.Context, user model.User) (string, error)
 }

@@ -1,47 +1,55 @@
 package service
 
 import (
+	"context"
 	"github.com/yurchenkosv/credential_storage/internal/clients"
 	"github.com/yurchenkosv/credential_storage/internal/model"
+	"github.com/yurchenkosv/credential_storage/internal/repository"
+	"io"
 )
 
 type ClientCredentialsService struct {
-	client clients.CredentialsStorageClient
+	client           clients.CredentialsStorageClient
+	binaryRepository repository.BinaryRepository
+	ctx              context.Context
 }
 
-func NewClientCredentialsService(client clients.CredentialsStorageClient) *ClientCredentialsService {
-	return &ClientCredentialsService{client: client}
+func NewClientCredentialsService(ctx context.Context,
+	client clients.CredentialsStorageClient,
+	binaryRepository repository.BinaryRepository,
+) *ClientCredentialsService {
+	return &ClientCredentialsService{
+		client:           client,
+		ctx:              ctx,
+		binaryRepository: binaryRepository,
+	}
 }
 
-func (s *ClientCredentialsService) GetBankCard() (model.BankingCardData, error) {
-	return s.client.GetBankCard()
+func (s *ClientCredentialsService) GetData() ([]model.Credentials, error) {
+	return s.client.GetData(s.ctx)
 }
 
-func (s *ClientCredentialsService) GetCredentials() (model.CredentialsData, error) {
-	return s.client.GetCredentials()
+func (s *ClientCredentialsService) DeleteData(data model.Credentials) error {
+	return s.client.DeleteData(s.ctx, data)
 }
 
-func (s *ClientCredentialsService) GetText() (model.TextData, error) {
-	return s.client.GetText()
-}
-
-func (s *ClientCredentialsService) GetBinary() (model.BinaryData, error) {
-	return s.client.GetBinary()
+func (s *ClientCredentialsService) SaveBinary(reader io.Reader, filename string) error {
+	_, err := s.binaryRepository.Save(reader, filename)
+	return err
 }
 
 func (s *ClientCredentialsService) SendBankCard(card model.BankingCardData) error {
-	return s.client.SendBankCard(card)
+	return s.client.SendBankCard(s.ctx, card)
 }
 
 func (s *ClientCredentialsService) SendCredentials(credentials model.CredentialsData) error {
-	return s.client.SendCredentials(credentials)
+	return s.client.SendCredentials(s.ctx, credentials)
 }
 
 func (s *ClientCredentialsService) SendText(data model.TextData) error {
-	return s.client.SendText(data)
+	return s.client.SendText(s.ctx, data)
 }
 
-func (s *ClientCredentialsService) SendBinary(data []byte) error {
-	binary := model.BinaryData{Data: data}
-	return s.client.SendBinary(binary)
+func (s *ClientCredentialsService) SendBinary(data model.BinaryData) error {
+	return s.client.SendBinary(s.ctx, data)
 }

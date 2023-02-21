@@ -2,17 +2,22 @@ package service
 
 import (
 	"context"
-	"errors"
+	"github.com/google/uuid"
 	"github.com/yurchenkosv/credential_storage/internal/model"
 	"github.com/yurchenkosv/credential_storage/internal/repository"
+	"io"
 )
 
 type CredentialsService struct {
-	repo repository.Repository
+	repo       repository.Repository
+	binaryRepo repository.BinaryRepository
 }
 
-func NewCredentialsService(repo repository.Repository) *CredentialsService {
-	return &CredentialsService{repo: repo}
+func NewCredentialsService(repo repository.Repository, binaryRepo repository.BinaryRepository) *CredentialsService {
+	return &CredentialsService{
+		repo:       repo,
+		binaryRepo: binaryRepo,
+	}
 }
 
 func (s *CredentialsService) SaveCredentialsData(ctx context.Context, data *model.CredentialsData, userID int) error {
@@ -39,8 +44,17 @@ func (s *CredentialsService) SaveTextData(ctx context.Context, data *model.TextD
 	return nil
 }
 
-func (s *CredentialsService) SaveBinaryData(ctx context.Context, data *model.CredentialsData, userID int) error {
-	return errors.New("Not implemented")
+func (s *CredentialsService) SaveBinaryData(ctx context.Context, reader io.Reader, data *model.BinaryData, userID int) error {
+	fileID := uuid.New()
+	link, err := s.binaryRepo.Save(reader, fileID.String())
+	if err != nil {
+		return err
+	}
+	err = s.repo.SaveBinaryData(ctx, data, userID, link)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *CredentialsService) GetCredentialsByName(ctx context.Context, credName string, userID int) ([]model.CredentialsData, error) {
@@ -50,8 +64,21 @@ func (s *CredentialsService) GetCredentialsByName(ctx context.Context, credName 
 
 func (s *CredentialsService) GetAllUserCredentials(ctx context.Context, userID int) ([]model.Credentials, error) {
 	data, err := s.repo.GetCredentialsByUserID(ctx, userID)
+	for _, dt := range data {
+		if dt.BinaryData != nil {
+			binDt, binErr := s.binaryRepo.Load(dt.BinaryData.Link)
+			if binErr != nil {
+				return nil, binErr
+			}
+			dt.BinaryData.Data = binDt
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
+}
+
+func (s *CredentialsService) DeleteCredential(ctx context.Context, data model.Credentials, userID int) error {
+	return s.repo.DeleteData(ctx, data, userID)
 }

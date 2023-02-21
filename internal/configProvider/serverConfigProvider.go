@@ -6,10 +6,13 @@ import (
 )
 
 type ServerConfig struct {
-	DatabaseDSN string `env:"CRED_SERVER_DATABASE_DSN" yaml:"database_dsn"`
-	Listen      string `env:"CRED_SERVER_LISTEN" envDefault:"localhost:8080" yaml:"listen"`
-	JWTSecret   string `env:"CRED_SERVER_JWT_SECRET" yaml:"jwt_secret"`
-	ListenGRPC  string `env:"CRED_SERVER_GRPC_LISTEN" envDefault:"localhost:8090" yaml:"listen_grpc"`
+	DatabaseDSN                string `env:"CRED_SERVER_DATABASE_DSN" yaml:"database_dsn"`
+	JWTSecret                  string `env:"CRED_SERVER_JWT_SECRET" yaml:"jwt_secret"`
+	EncryptionSecret           string `env:"CRED_SERVER_ENCRYPTION_SECRET" yaml:"encryption_secret"`
+	ListenGRPC                 string `env:"CRED_SERVER_GRPC_LISTEN" envDefault:"localhost:8090" yaml:"listen_grpc"`
+	BinaryLocalStorageLocation string `env:"CRED_SERVER_LOCAL_STORAGE_LOCATION" envDefault:"/tmp" yaml:"binary_local_storage_location"`
+	CertLocation               string `env:"CRED_SERVER_CERT_LOCATION" envDefault:"./pubkey.crt" yaml:"cert_location"`
+	PrivateKeyLocation         string `env:"CRED_SERVER_PRIVATE_KEY_LOCATION" envDefault:"./privkey.pem"`
 }
 
 type ServerConfigProvider struct {
@@ -30,6 +33,9 @@ func (p *ServerConfigProvider) Parse() error {
 	}
 	if cnf.JWTSecret == "" {
 		return errors.New("JWT secret must be set")
+	}
+	if cnf.EncryptionSecret == "" {
+		return errors.New("encryption secret must be set")
 	}
 	p.cnf = cnf
 	return nil

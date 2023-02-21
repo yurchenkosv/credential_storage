@@ -22,6 +22,7 @@ var (
 )
 
 func main() {
+	log.SetLevel(log.WarnLevel)
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
@@ -38,14 +39,23 @@ func main() {
 		log.Fatal(err)
 	}
 
+	tlsCredentials, err := loadTLSCredentials(config.GetConfig().PrivateKeyLocation, config.GetConfig().CertLocation)
+	if err != nil {
+		log.Fatal("cannot load TLS credentials: ", err)
+	}
+
 	tokenAuth = jwtauth.New("HS256", []byte(config.GetConfig().JWTSecret), nil)
 	authSvc := service.NewAuthService(repo, tokenAuth)
-	credentialsSvc := service.NewCredentialsService(repo)
+	binaryRepo := repository.NewLocalBinaryRepository(config.GetConfig().BinaryLocalStorageLocation)
+	credentialsSvc, err := service.NewProxyEncryptedCredentialService(repo, binaryRepo, config.GetConfig().EncryptionSecret)
+	if err != nil {
+		log.Fatal(err)
+	}
 	authInterceptor := interceptors.NewAuthInterceptor(authSvc)
 
 	grpcAuthController := controllers.NewAuthGRPCController(authSvc)
-	credentialsController := controllers.NewGophkeeperController(credentialsSvc)
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.JWTInterceptor))
+	credentialsController := controllers.NewCredentialsGRPCController(credentialsSvc)
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.JWTInterceptor), grpc.Creds(tlsCredentials))
 
 	api.RegisterAuthServiceServer(grpcServer, grpcAuthController)
 	api.RegisterCredentialServiceServer(grpcServer, credentialsController)
@@ -56,6 +66,7 @@ func main() {
 	}
 
 	go func(listener net.Listener) {
+		log.Info("credentials server started")
 		err = grpcServer.Serve(listener)
 		if err != nil {
 			log.Error(err)
@@ -64,9 +75,4 @@ func main() {
 
 	<-osSignal
 	grpcServer.GracefulStop()
-
-	//router := routers.NewRouter(repo, tokenAuth)
-	//
-	//log.Fatal(http.ListenAndServe(config.GetConfig().Listen, router))
-
 }

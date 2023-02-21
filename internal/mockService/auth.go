@@ -50,6 +50,51 @@ func (mr *MockAuthMockRecorder) AuthenticateUser(ctx, user interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateUser", reflect.TypeOf((*MockAuth)(nil).AuthenticateUser), ctx, user)
 }
 
+// GenerateToken mocks base method.
+func (m *MockAuth) GenerateToken(user *model.User) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateToken", user)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GenerateToken indicates an expected call of GenerateToken.
+func (mr *MockAuthMockRecorder) GenerateToken(user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateToken", reflect.TypeOf((*MockAuth)(nil).GenerateToken), user)
+}
+
+// GetJWTTokenFromGRPCContext mocks base method.
+func (m *MockAuth) GetJWTTokenFromGRPCContext(ctx context.Context) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetJWTTokenFromGRPCContext", ctx)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetJWTTokenFromGRPCContext indicates an expected call of GetJWTTokenFromGRPCContext.
+func (mr *MockAuthMockRecorder) GetJWTTokenFromGRPCContext(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJWTTokenFromGRPCContext", reflect.TypeOf((*MockAuth)(nil).GetJWTTokenFromGRPCContext), ctx)
+}
+
+// GetUserFromToken mocks base method.
+func (m *MockAuth) GetUserFromToken(token string) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserFromToken", token)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserFromToken indicates an expected call of GetUserFromToken.
+func (mr *MockAuthMockRecorder) GetUserFromToken(token interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFromToken", reflect.TypeOf((*MockAuth)(nil).GetUserFromToken), token)
+}
+
 // RegisterUser mocks base method.
 func (m *MockAuth) RegisterUser(ctx context.Context, user *model.User) (*model.User, error) {
 	m.ctrl.T.Helper()
